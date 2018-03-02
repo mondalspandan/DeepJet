@@ -1,11 +1,10 @@
 from __future__ import print_function
 
-from TrainData import TrainData,fileTimeOut
+from DeepJetCore.TrainData import TrainData, fileTimeOut
 import numpy
 
-
 class TrainData_deepDoubleC(TrainData):
-    	print("DEEPJETCORE")
+    
     def __init__(self):
         '''
         This class is meant as a base class for the FatJet studies
@@ -14,9 +13,10 @@ class TrainData_deepDoubleC(TrainData):
         TrainData.__init__(self)
         
         #define truth:
+	self.treename = "deepntuplizer/tree"
         self.undefTruth=['isUndefined']
         self.truthclasses=['fj_isNonCC', 'fj_isCC']
-        self.referenceclass='fj_isNonCC' ## used for pt reshaping
+        self.referenceclass='fj_isCC' ## used for pt reshaping
         self.registerBranches(['fj_pt','fj_sdmass'])
 
         self.weightbranchX='fj_pt'
@@ -118,7 +118,7 @@ class TrainData_deepDoubleC_db(TrainData_deepDoubleC):
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         
         #the first part is standard, no changes needed
-        from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, ZeroPadParticles
+        from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, ZeroPadParticles
         import numpy
         import ROOT
         
@@ -312,7 +312,7 @@ class TrainData_deepDoubleC_db_pf_cpf_sv(TrainData_deepDoubleC):
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         
         #the first part is standard, no changes needed
-        from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, ZeroPadParticles
+        from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, ZeroPadParticles
         import numpy
         import ROOT
         
@@ -491,7 +491,7 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         
         #the first part is standard, no changes needed
-        from preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, ZeroPadParticles
+        from DeepJetCore.preprocessing import MeanNormApply, MeanNormZeroPad, MeanNormZeroPadParticles, ZeroPadParticles
         import numpy
         import ROOT
         
