@@ -21,7 +21,6 @@ def weighted_loss(loss_function, clipmin = 0., clipmax = None):
     
     clipmin = 0., clipmax = None
     The applied weights can be clipped to reasonable values, it must not be smaller than 0
->>>>>>> 1c69df35ff96c13e74f9ea7e097d0c1aa07ed74c
         
     """
     if (clipmin<0.):
