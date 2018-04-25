@@ -2,18 +2,20 @@
 import os
 from argparse import ArgumentParser
 
-path = '/eos/user/a/anovak/public/merged_QCDHccHbb/train/'
-
 parser = ArgumentParser()
-parser.add_argument("--train", help="Path to training sample", default=path)
-parser.add_argument("--test", help="Path to testing sample", default=path.replace("train", "test") )
+parser.add_argument("--train", help="Path to training sample")
+parser.add_argument("--test", help="Path to testing sample", default=None)
+parser.add_argument("--listname", help="'(train/test)_'+listname+'.root'", default="list")
 args=parser.parse_args()
+
+if args.test == None:
+	args.test = args.train.replace("train", "test")
 
 
 ### Write train input list
 path = args.train
 if path.endswith("/"): path = path[:-1]
-f = open('train_list.txt', 'w')
+f = open('train_'+args.listname+'.txt', 'w')
 for i in os.listdir(path):
 	if not i.endswith("root"): continue
 	f.write(path+"/"+i+'\n')
@@ -26,7 +28,7 @@ f.close()
 ### Write test input list
 path = args.test
 if path.endswith("/"): path = path[:-1]
-f = open('test_list.txt', 'w')
+f = open('test_'+args.listname+'.txt', 'w')
 for i in os.listdir(path):
 	if not i.endswith("root"): continue
 	f.write(path+"/"+i+'\n')

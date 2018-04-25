@@ -29,7 +29,8 @@ dayinfo = now.strftime("%b%d_%y")
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
 parser.add_argument("--train", action='store_true', default=False, help="Run training")
 parser.add_argument("--eval", action='store_true', default=False, help="Run evaluation")
-parser.add_argument("-g", "--gpu", action='store_const', default=False, help="Run on gpu's (Need to be in deepjetLinux3_gpu env)", const=1)
+parser.add_argument("--re", action='store_true', default=False, help="Evaluation from stored df")
+#parser.add_argument("-g", "--gpu", default=1, help="Run on gpu's (Need to be in deepjetLinux3_gpu env)", const=1)
 parser.add_argument("-i", help="Training dataCollection.dc", default=None, metavar="FILE")
 parser.add_argument("-n",  help="Training directory name will by default look like MMMDD_YYYY_train[your input]", default="test", metavar="PATH")
 opts=parser.parse_args()
@@ -46,6 +47,8 @@ class MyClass:
     """A simple example class"""
     def __init__(self):
 	self.gpu = ''
+	self.gpufraction = ''
+	self.modelMethod = ''
         self.inputDataCollection = ''
         self.outputDir = ''
 
@@ -64,7 +67,7 @@ testDataCollection = trainDataCollection.replace("train","test")
 removedVars = None
 
 #Toggle to load model directly (True) or load weights (False) 
-LoadModel = False
+LoadModel = True
 
 #select model and eval functions
 from models.DeepJet_models_final import conv_model_final as trainingModel
@@ -82,33 +85,38 @@ if TrainBool:
     args = MyClass()
     args.inputDataCollection = inputTrainDataCollection
     args.outputDir = trainDir
-    args.GPU = -1
+    #args.GPU = -1
+    args.multi_gpu = os.system("nvidia-smi -L")+1
+    print args.multi_gpu
 
-    #also does all the parsing
-    #train=training_base(testrun=False,args=args)
-    train=training_base(testrun=False, args=args)
-    if not train.modelSet():
-        train.setModel(trainingModel,inputDataset,removedVars)
+    train=training_base(splittrainandtest=0.9,testrun=False, parser=args)
+    #train=training_base(splittrainandtest=0.9,testrun=False, args=args)
+    #if not train.modelSet():
+    if True:
+        #train.setModel(trainingModel,inputDataset,removedVars, multi_gpu=1 )
+        train.setModel(trainingModel, 
+			 #num_classes=5, #num_regclasses=5,
+				datasets=inputDataset, multi_gpu=1)
     
         train.compileModel(learningrate=0.001,
                            loss=['categorical_crossentropy'],
-                           metrics=['accuracy'],
-                           loss_weights=[1.])
-    
-        """model,history,callbacks = train.trainModel(nepochs=1, 
-                                                   batchsize=1024, 
+                           	 metrics=['accuracy','binary_accuracy','MSE','MSLE'],
+				loss_weights=[1.])
+        """ 
+	model,history,callbacks = train.trainModel(nepochs=1, 
+                                                   batchsize=4000, 
                                                    stop_patience=1000, 
                                                    lr_factor=0.7, 
                                                    lr_patience=10, 
                                                    lr_epsilon=0.00000001, 
                                                    lr_cooldown=2, 
                                                    lr_minimum=0.00000001, 
-                                                   maxqsize=100)
-	"""
-        #train.keras_model=fixLayersContaining(train.keras_model, 'input_batchnorm')
-        #printLayerInfosAndWeights(train.keras_model)
-        model,history,callbacks = train.trainModel(nepochs=100,
-                                                   batchsize=1024,
+                                                    maxqsize=100)
+	
+        train.keras_model=fixLayersContaining(train.keras_model, 'input_batchnorm')
+        """
+        model, history = train.trainModel(nepochs=5,
+                                                   batchsize=5024,
                                                    stop_patience=1000,
                                                    lr_factor=0.7,
                                                    lr_patience=10,
@@ -121,7 +129,7 @@ if EvalBool:
     evalModel = loadModel(trainDir,inputTrainDataCollection,trainingModel,LoadModel,inputDataset,removedVars)
     evalDir = trainDir.replace('train','out')
     
-    from DataCollection import DataCollection
+    from DeepJetCore.DataCollection import DataCollection
     testd=DataCollection()
     testd.readFromFile(inputTestDataCollection)
 
@@ -130,6 +138,6 @@ if EvalBool:
     else:
         os.mkdir(evalDir)
 
-    df, features_val = makeRoc(testd, evalModel, evalDir)
+    df = makeRoc(testd, evalModel, evalDir, opts.re)
     makeLossPlot(trainDir,evalDir)
     

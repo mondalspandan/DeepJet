@@ -32,10 +32,10 @@ sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 
 def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars=None):
     inputModel = '%s/KERAS_check_best_model.h5'%inputDir
+    # inputModel = '%s/KERAS_model.h5'%inputDir
     inputWeights = '%s/KERAS_check_best_model_weights.h5' %inputDir
   
-    from DataCollection import DataCollection
-
+    from DeepJetCore.DataCollection import DataCollection
     traind=DataCollection()
     traind.readFromFile(trainData)
     traind.dataclass.regressiontargetclasses = range(0,NBINS)
@@ -43,7 +43,11 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
 
     if(LoadModel):
         evalModel = load_model(inputModel, custom_objects = global_loss_list)
-        print evalModel.summary()
+        #print evalModel.summary()
+        shapes=traind.getInputShapes()
+
+        #print traind.getInputShapes()
+
     else:
         shapes=traind.getInputShapes()
         train_inputs = []
@@ -54,7 +58,7 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
 
     return evalModel
 
-def makeRoc(testd, model, outputDir):
+def makeRoc(testd, model, outputDir, replot=False):
     ## # summarize history for loss for training and test sample
     ## plt.figure(1)
     ## plt.plot(callbacks.history.history['loss'])
@@ -80,46 +84,44 @@ def makeRoc(testd, model, outputDir):
     
     # let's use all entries
     NENT = 1
-    
-    #print testd.nsamples
-    filelist=[]
-    i=0
-    for s in testd.samples:
-        spath = testd.getSamplePath(s)
-        print spath
-        filelist.append(spath)
-        h5File = h5py.File(spath)
-        features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
-        predict_test_i = model.predict(features_val)
-        if i==0:
-            predict_test = predict_test_i
-        else:
-            predict_test = np.concatenate((predict_test,predict_test_i))
-        i+=1
-        print predict_test.shape
+
+    if replot:
+	df = pd.read_pickle(outputDir.replace("out","train")+'/testresults.pkl')    
+    else:
+        #print testd.nsamples
+        filelist=[]
+        i=0
+        for s in testd.samples:
+            spath = testd.getSamplePath(s)
+            print spath
+            filelist.append(spath)
+            h5File = h5py.File(spath)
+   	    f = h5File
+	    print "Keys: %s" % f.keys()
+            print f['x_listlength']
+            #features_val = [h5File['x%i_shape'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
+            features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
+            # print features_val
+            predict_test_i = model.predict(features_val)
+            if i==0:
+                predict_test = predict_test_i
+            else:
+                predict_test = np.concatenate((predict_test,predict_test_i))
+            i+=1
+	    print "TEST SHAPE"
+            print predict_test.shape
 
     #features_val = [fval[::NENT] for fval in testd.getAllFeatures()]
-    labels_val=testd.getAllLabels()[0][::NENT,:]
+        labels_val=testd.getAllLabels()[0][::NENT,:]
     #weights_val=testd.getAllWeights()[0][::NENT]
     #spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
 
-    # OH will be the truth "y" input to the network                                                                                   
-    # OH contains both, the actual truth per sample and the actual bin (one hot encoded) of the variable to be independent of 
-    #OH = np.zeros((labels_val.shape[0],42))
-    #for i in range(0,labels_val.shape[0]):
-    #    # bin of a (want to be independent of a)                                    
-    #    OH[i,int((spectators_val[i,2]-40.)/4.)]=1
-    #    # aimed truth (target)                                                                                                 
-    #    OH[i,40] = labels_val[i,0]
-    #    OH[i,41] = labels_val[i,1]
-
-
-    
     #print features_val[0].shape
+        truthnames = testd.getUsedTruth()
                                                                                         
-    spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
-    df = pd.DataFrame(spectators_val)
-    df.columns = ['fj_pt',
+        spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
+        df = pd.DataFrame(spectators_val)
+        df.columns = ['fj_pt',
                   'fj_eta',
                   'fj_sdmass',
                   'fj_n_sdsubjets',
@@ -131,7 +133,7 @@ def makeRoc(testd, model, outputDir):
                   'ntracks',
                   'nsv']
 
-    print(df.iloc[:10])
+    #print(df.iloc[:10])
 
         
     #predict_test = model.predict(features_val)
@@ -140,12 +142,27 @@ def makeRoc(testd, model, outputDir):
     #predict_tf = tf.convert_to_tensor(predict_test, np.float32)
     #OH_tf = tf.convert_to_tensor(OH, np.float32)
     #print('loss_kldiv',loss_kldiv(OH_tf,predict_tf).eval())
+	print labels_val[0]
+	print predict_test[0]
 
-    df['fj_isH'] = labels_val[:,1]
-    df['fj_deepdoublec'] = predict_test[:,1]
-    df = df[(df.fj_sdmass > 40) & (df.fj_sdmass < 200) & (df.fj_pt > 300) &  (df.fj_pt < 2500)]
+	for i, tname in enumerate(truthnames):
+		if len(truthnames) == 2: # to be fixed
+			if i == 0: 
+				df['fj_isH'] = labels_val[:,1]
+			if i == 1:
+				df['fj_deepdoublec'] = predict_test[:,1]
+		else:
+				
+			df['truth'+tname] = labels_val[:,i]
+			df['predict'+tname] = predict_test[:,i]
+        #df['fj_isH'] = labels_val[:,1]
+        #df['fj_deepdoublec'] = predict_test[:,1]
 
-    print(df.iloc[:10])
+        df = df[(df.fj_sdmass > 40) & (df.fj_sdmass < 200) & (df.fj_pt > 300) &  (df.fj_pt < 2500)]
+
+	df.to_pickle(outputDir+'/testresults.pkl')    #to save the dataframe, df to 123.pkl
+
+    #print(df.iloc[:10])
 
     fpr, tpr, threshold = roc_curve(df['fj_isH'],df['fj_deepdoublec'])
     dfpr, dtpr, threshold1 = roc_curve(df['fj_isH'],df['fj_doubleb'])
@@ -280,7 +297,7 @@ def makeRoc(testd, model, outputDir):
     print('hist_anti_h',hist_anti_h)
     print('kl_q+kl_h',kl(hist_fill_q, hist_anti_q)+kl(hist_fill_h, hist_anti_h))
 
-    return df, features_val
+    return df
 
 def _byteify(data, ignore_dicts = False):
     # if this is a unicode string, return its string representation
@@ -320,44 +337,36 @@ def makeLossPlot(inputDir, outputDir):
     plt.ylabel('loss')
     plt.savefig("%s/loss.pdf"%outputDir)
     
-def makeComparisonPlots(testds, models,names, outputDir):
-
+def makeComparisonPlots(testds, models,names, outputDir, pkls=None, flips=None, xlabel="H(cc) efficiency", fout="ROCcomparison.pdf"):
 
 # let's use all entries
     NENT = 1
-    
-    #print testd.nsamples
-    filelist=[]
+    if pkls == None:   
+	filelist=[]
+        predictions = []
+        for model, testd in zip(models, testds):
+            first = True
+            for s in testd.samples:
+                spath = testd.getSamplePath(s)
+                filelist.append(spath)
+                h5File = h5py.File(spath)
+                features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
+                predict_test_i = model.predict(features_val)
+                if first:
+                    predict_test = predict_test_i
+                else:
+                    predict_test = np.concatenate((predict_test,predict_test_i))
+                first= False
+            predictions.append(predict_test)
 
-    predictions = []
-#    print models
-#    print testd
-    for model, testd in zip(models, testds):
-        first = True
-        for s in testd.samples:
-        #for s in range(1):
-            #spath = testd.getSamplePath(testd.samples[s])
-            spath = testd.getSamplePath(s)
-            print spath
-            filelist.append(spath)
-            h5File = h5py.File(spath)
-            features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
-            predict_test_i = model.predict(features_val)
-            if first:
-                predict_test = predict_test_i
-            else:
-                predict_test = np.concatenate((predict_test,predict_test_i))
-            first= False
-        predictions.append(predict_test)
-
-    labels_val=testd.getAllLabels()[0][::NENT,:]
+        labels_val=testd.getAllLabels()[0][::NENT,:]
                                                                                         
-    spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
+        spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
     
-    dfs = []
-    for i in range(len(models)):
-        df = pd.DataFrame(spectators_val)
-        df.columns = ['fj_pt',
+        dfs = []
+        for i in range(len(models)):
+            df = pd.DataFrame(spectators_val)
+            df.columns = ['fj_pt',
                       'fj_eta',
                       'fj_sdmass',
                       'fj_n_sdsubjets',
@@ -369,18 +378,23 @@ def makeComparisonPlots(testds, models,names, outputDir):
                       'ntracks',
                       'nsv']
 
-        df['fj_isH'] = labels_val[:,1]
-        df['fj_deepdoublec'] = predictions[i][:,1]
+            df['fj_isH'] = labels_val[:,1]
+            df['fj_deepdoublec'] = predictions[i][:,1]
         
-        df = df[(df.fj_sdmass > 40) & (df.fj_sdmass < 200) & (df.fj_pt > 300) &  (df.fj_pt < 2500)]
+            df = df[(df.fj_sdmass > 40) & (df.fj_sdmass < 200) & (df.fj_pt > 300) &  (df.fj_pt < 2500)]
 
-        dfs.append(df)
+            dfs.append(df)
+    else:
+	dfs = []
+	for pkl in pkls:
+	    df = pd.read_pickle(pkl)	    
+	    dfs.append(df)
 
     fprs = []
     tprs = []
     thresholds = []
 
-    for i in range(len(models)):
+    for i in range(len(names)):
         fpr, tpr, threshold = roc_curve(dfs[i]['fj_isH'],dfs[i]['fj_deepdoublec'])
         fprs.append(fpr)
         tprs.append(tpr)
@@ -398,36 +412,60 @@ def makeComparisonPlots(testds, models,names, outputDir):
     workingPoints = [0.01, 0.05, 0.1, 0.25, 0.5] # % mistag rate
     for wp in workingPoints:
         deepdoublebcuts[str(wp)]=[]
-    for i in range(len(models)):
+    for i in range(len(names)):
         for wp in workingPoints: 
             idx, val = find_nearest(fpr, wp)
             deepdoublebcuts[str(wp)].append(threshold[idx]) # threshold for deep double-b corresponding to ~1% mistag rate
             print('deep double-b > %f coresponds to %f%% QCD mistag rate'%(deepdoublebcuts[str(wp)][i] ,100*val))
 
     aucs = []
-    for i in range(len(models)):
-        aucs.append(auc(fprs[i],tprs[i]))
-    
-    aucBDT = auc(dfpr, dtpr)
+    for i in range(len(names)):
+	if flips!= None:
+		if not flips[i]:
+	        	aucs.append(auc(fprs[i],tprs[i]))
+		else:
+		        aucs.append(auc(1.-fprs[i],1.-tprs[i]))
+	else:
+		aucs.append(auc(fprs[i],tprs[i]))
+
+    if flips == None: # nothing flipped
+   	aucBDT = auc(dfpr, dtpr)
+    else:
+   	aucBDT = auc(1.-dfpr, 1.-dtpr)	
 
     plt.figure()       
-    for i in range(len(models)):
-        plt.plot(tprs[i],fprs[i],label='deep %s, auc = %.1f%%'% (names[i],(aucs[i]*100)))
+    colors = ['firebrick', 'steelblue', 'green']
+    for i in range(len(names)):
+	c = colors[i]
+	if flips!= None:
+		if not flips[i]:
+		        plt.plot(tprs[i],fprs[i], color=c, label='%s, auc = %.1f%%'% (names[i],(aucs[i]*100)))
+		else:
+	        	plt.plot(1.-tprs[i],1.-fprs[i], color = c, label='%s, auc = %.1f%%'% (names[i],(aucs[i]*100)))
+	else:	
+		plt.plot(tprs[i],fprs[i], color=c, label='%s, auc = %.1f%%'% (names[i],(aucs[i]*100)))
 
-    plt.plot(dtpr,dfpr,label='BDT double-b, auc = %.1f%%'%(aucBDT*100))
+    if flips == None: # nothing flipped
+	plt.plot(dtpr,dfpr, color='darkorange', label='BDT double-b, auc = %.1f%%'%(aucBDT*100))
+    else:
+	plt.plot(1.-dtpr,1.-dfpr, color='darkorange', label='BDT double-b, auc = %.1f%%'%(aucBDT*100))
     plt.semilogy()
-    plt.xlabel("H(cc) efficiency")
-    plt.ylabel("QCD mistag rate")
+    plt.xlabel(xlabel)
+    if flips == None: # nothing flipped
+        plt.ylabel("QCD mistag rate")
+    else:
+	plt.ylabel("H(bb) mistag rate")
     plt.ylim(0.001,1)
     plt.grid(True)
     plt.legend()
-    plt.savefig(outputDir+"ROCcomparison.pdf")
+    plt.savefig(fout, dpi=900)
 
 
     for wp in workingPoints:
+	continue
         plt.figure()
         bins = np.linspace(40,200,41)
-        for i in range(len(models)):
+        for i in range(len(names)):
             deepdoublebcut = deepdoublebcuts[str(wp)][i]
             df_passdeepdoubleb = dfs[i][dfs[i].fj_deepdoublec > deepdoublebcut]
             plt.hist(df_passdeepdoubleb['fj_sdmass'], bins=bins, weights = 1-df_passdeepdoubleb['fj_isH'],alpha=0.5,normed=True,label='QCD %i%% mis-tag for %s'%(float(wp)*100.,names[i]))

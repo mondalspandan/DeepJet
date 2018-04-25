@@ -87,13 +87,14 @@ def cropInputs(inputs, datasets, removedVars):
     return croppedLayers
 
 
-def conv_model_final(inputs, num_classes, num_regclasses, datasets, removedVars = None, **kwargs):
+#def conv_model_final(inputs, num_classes, num_regclasses, datasets, removedVars = None, multi_gpu=1, **kwargs):
+def conv_model_final(inputs, num_classes, num_regclasses, datasets, multi_gpu=1, **kwargs):
 
     normalizedInputs = []
 
     for i in range(len(inputs)):
 	print i
-	print datasets[i]
+	#print datasets[i]
 	print inputs[i]
         normedLayer = BatchNormalization(momentum=0.3,name = '%s_input_batchnorm'%datasets[i])(inputs[i])
         normalizedInputs.append(normedLayer)
@@ -122,7 +123,8 @@ def conv_model_final(inputs, num_classes, num_regclasses, datasets, removedVars 
                             
     print output.shape
     model = keras.models.Model(inputs=inputs, outputs=[output])
-    model = multi_gpu_model(model, gpus=2)
+    if multi_gpu > 1:
+        model = multi_gpu_model(model, gpus=multi_gpu)
 
     print model.summary()
     return model
