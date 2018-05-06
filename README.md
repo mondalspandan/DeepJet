@@ -3,20 +3,38 @@
 DeepJet: Repository for training and evaluation of deep neural networks for Jet identification
 ===============================================================================
 
-This package depends on DeepJetCore (https://github.com/DL4Jets/DeepJetCore)
+This package depends on DeepJetCore - original at (https://github.com/DL4Jets/DeepJetCore)
+For Maxwell get https://github.com/anovak10/DeepJetCore and follow the setup
 
-Setup (CERN)
+Setup
 ==========
 
 The DeepJet package and DeepJetCore have to share the same parent directory
 
-Usage
+Usage (Maxwell)
 ==============
 
-After logging in, please source the right environment (please cd to the directory first!):
+Connect to desy and maxwell
+```
+ssh max-wgs
+```
+
+To run interactively:
+```
+salloc -N 1 --partition=all --constraint=GPU --time=<minutes>
+```
+
+Alternatively add the following to your .bashrc to get allocation for x hours with getgpu x
+```
+getgpu () {
+   salloc -N 1 --partition=all --constraint=GPU --time=$((60 * $1))
+}
+```
+
+ssh to the machine that was allocated to you
 ```
 cd <your working dir>/DeepJet
-source lxplus_env.sh / gpu_env.sh
+source gpu_env.sh
 ```
 
 
@@ -31,41 +49,24 @@ The preparation for the training consists of the following steps
   ```
   convertFromRoot.py -i /path/to/the/root/ntuple/list_of_root_files.txt -o /output/path/that/needs/some/disk/space -c TrainData_myclass
   ```
-  
-  This step can take a while.
-
-
-- prepare the training file and the model. Please refer to DeepJet/Train/XXX_template.reference.py
-  
-
+- You can use the following script to create the lists (if you store the files in a train and test directory within one parent you can only specify test
+```
+  python list_writer.py --train <path/to/directory/of/files/train> --test <path/to/directory/of/files/test>
+``` 
+Example use:
+```
+ INDIR=run #Make a directory for the run
+ convertFromRoot.py -i train_list.txt -o $INDIR/dctrain -c TrainData_VHbb_bdt```
 
 Training
 ====
 
-Since the training can take a while, it is advised to open a screen session, such that it does not die at logout.
+Run the training (for now BTrain for beta)
 ```
-ssh lxplus.cern.ch
-<note the machine you are on, e.g. lxplus058>
-screen
-ssh lxplus7
-```
-Then source the environment, and proceed with the training. Detach the screen session with ctr+a d.
-You can go back to the session by logging in to the machine the session is running on (e.g. lxplus58):
+cd Train
+python BTrain.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training  --batch 256 --epochs 100
 
 ```
-ssh lxplus.cern.ch
-ssh lxplus058
-screen -r
-``` 
-
-Please close the session when the training is finished
-
-the training is launched in the following way:
-```
-python train_template.py /path/to/the/output/of/convert/dataCollection.dc <output dir of your choice>
-```
-
-
 Evaluation
 ====
 
@@ -74,10 +75,23 @@ The evaluation consists of a few steps:
 
 1) converting the test data
 ```
-convertFromRoot.py --testdatafor <output dir of training>/trainsamples.dc -i /path/to/the/root/ntuple/list_of_test_root_files.txt -o /output/path/for/test/data
+cd ..
+convertFromRoot.py -i test_list.txt -o $INDIR/dctest --testdatafor $INDIR/training/trainsamples.dc
 ```
 
+2) Evaluate
+
+```
+cd Train
+python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/eval
+```
+
+Output .pkl file and some plots will be stored in $INDIR/eval
+
+Currently unused:
+====
 2) applying the trained model to the test data
+
 ```
 predict.py <output dir of training>/KERAS_model.h5  /output/path/for/test/data/dataCollection.dc <output directory>
 ```
