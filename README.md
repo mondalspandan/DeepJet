@@ -57,7 +57,7 @@ Example use:
 ```
  INDIR=run #Make a directory for the run
  convertFromRoot.py -i train_list.txt -o $INDIR/dctrain -c TrainData_VHbb_bdt```
-
+```
 Training
 ====
 
