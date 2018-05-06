@@ -111,8 +111,11 @@ def makeRoc(testd, model, outputDir, replot=False):
 	    print "TEST SHAPE"
             print predict_test.shape
 
-    #features_val = [fval[::NENT] for fval in testd.getAllFeatures()]
+    	#features_val = [fval[::NENT] for fval in testd.getAllFeatures()]
         labels_val=testd.getAllLabels()[0][::NENT,:]
+        features_val=testd.getAllFeatures()[0][::NENT,0,:]
+	td = testd.dataclass
+	feature_names = td.branches[-1]
     #weights_val=testd.getAllWeights()[0][::NENT]
     #spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
 
@@ -120,18 +123,9 @@ def makeRoc(testd, model, outputDir, replot=False):
         truthnames = testd.getUsedTruth()
                                                                                         
         spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
-        df = pd.DataFrame(spectators_val)
-        df.columns = ['fj_pt',
-                  'fj_eta',
-                  'fj_sdmass',
-                  'fj_n_sdsubjets',
-                  'fj_doubleb',
-                  'fj_tau21',
-                  'fj_tau32',
-                  'npv',
-                  'npfcands',
-                  'ntracks',
-                  'nsv']
+        df = pd.DataFrame(features_val)
+        df.columns = [feature_names]
+
 
     #print(df.iloc[:10])
 
@@ -146,19 +140,18 @@ def makeRoc(testd, model, outputDir, replot=False):
 	print predict_test[0]
 
 	for i, tname in enumerate(truthnames):
-		if len(truthnames) == 2: # to be fixed
-			if i == 0: 
-				df['fj_isH'] = labels_val[:,1]
-			if i == 1:
-				df['fj_deepdoublec'] = predict_test[:,1]
-		else:
-				
-			df['truth'+tname] = labels_val[:,i]
-			df['predict'+tname] = predict_test[:,i]
+		#if len(truthnames) == 2: # to be fixed
+		#	if i == 0: 
+		#		df['fj_isH'] = labels_val[:,1]
+		#	if i == 1:
+		#		df['fj_deepdoublec'] = predict_test[:,1]
+		#else:	
+		df['truth'+tname] = labels_val[:,i]
+		df['predict'+tname] = predict_test[:,i]
         #df['fj_isH'] = labels_val[:,1]
         #df['fj_deepdoublec'] = predict_test[:,1]
 
-        df = df[(df.fj_sdmass > 40) & (df.fj_sdmass < 200) & (df.fj_pt > 300) &  (df.fj_pt < 2500)]
+        #df = df[(df.fj_sdmass > 40) & (df.fj_sdmass < 200) & (df.fj_pt > 300) &  (df.fj_pt < 2500)]
 
 	df.to_pickle(outputDir+'/testresults.pkl')    #to save the dataframe, df to 123.pkl
 

@@ -87,8 +87,8 @@ def cropInputs(inputs, datasets, removedVars):
     return croppedLayers
 
 
-#def conv_model_final(inputs, num_classes, num_regclasses, datasets, removedVars = None, multi_gpu=1, **kwargs):
-def conv_model_final(inputs, num_classes, num_regclasses, datasets, multi_gpu=1, **kwargs):
+def conv_model_final(inputs, num_classes, num_regclasses, datasets, removedVars = None, multi_gpu=1, **kwargs):
+#def conv_model_final(inputs, num_classes, num_regclasses, datasets, **kwargs):
 
     normalizedInputs = []
 
@@ -121,7 +121,7 @@ def conv_model_final(inputs, num_classes, num_regclasses, datasets, multi_gpu=1,
     fc = FC(concat, 100, p=0.1, name='fc1')
     output = keras.layers.Dense(num_classes, activation='softmax', name='ID_pred', kernel_initializer=kernel_initializer_fc)(fc)
                             
-    print output.shape
+    #print output.shape
     model = keras.models.Model(inputs=inputs, outputs=[output])
     if multi_gpu > 1:
         model = multi_gpu_model(model, gpus=multi_gpu)

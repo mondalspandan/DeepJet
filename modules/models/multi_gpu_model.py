@@ -7,10 +7,12 @@ def multi_gpu_model(model, gpus):
     num_gpus = len(gpus)
     target_gpu_ids = gpus
   else:
+    print "Using ngpus:", gpus
     num_gpus = gpus
     target_gpu_ids = range(num_gpus)
 
   def get_slice(data, i, parts):
+    import tensorflow as tf
     shape = tf.shape(data)
     batch_size = shape[:1]
     input_shape = shape[1:]
