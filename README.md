@@ -88,6 +88,18 @@ python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollecti
 
 Output .pkl file and some plots will be stored in $INDIR/eval
 
+To use Maxwell Batch
+====
+Example config file can be found in run/BDT.sh
+```
+sbatch run/BDT.sh
+
+tail -f run/bdt-<jobid>.out # To see job output updated in real time
+squeue -u username # To display queue
+scancel jobid # To cancel job
+```
+
+
 Currently unused:
 ====
 2) applying the trained model to the test data
