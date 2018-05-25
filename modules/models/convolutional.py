@@ -1,6 +1,7 @@
-from keras.layers import Dense, Dropout, Flatten,Concatenate, Convolution2D, LSTM,merge, Convolution1D, Conv2D
+from keras.layers import Dense, Dropout, Flatten,Concatenate, Convolution2D, LSTM,merge, Convolution1D, Conv2D, GRU, SpatialDropout1D, Conv1D
 from keras.models import Model
 from keras.layers.normalization import BatchNormalization
+from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.merge import Add, Multiply
 from buildingBlocks import block_deepFlavourConvolutions, block_deepFlavourDense, block_SchwartzImage, block_deepFlavourBTVConvolutions
 
@@ -417,3 +418,63 @@ def convolutional_model_ConvCSV(Inputs,nclasses,nregclasses,dropoutRate=0.25):
     predictions = Dense(nclasses, activation='softmax',kernel_initializer='lecun_uniform')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model
+
+
+def FC(data, num_hidden, act='relu', p=None, name='', trainable=True):
+    kernel_initializer_fc = 'lecun_uniform'
+    if act=='leakyrelu':
+        fc = Dense(num_hidden, activation='linear',
+                   name='%s_%s' % (name,act),
+                   kernel_initializer=kernel_initializer_fc,
+                   trainable=trainable)(data) # Add any layer, with the default of a linear squashing function
+        fc = LeakyReLU(alpha=.001)(fc)   # add an advanced activation                                                                                                     
+    else:
+        fc = Dense(num_hidden, activation=act,
+                   name='%s_%s' % (name,act),
+                   kernel_initializer=kernel_initializer_fc,
+                   trainable=trainable)(data)
+    if not p:
+        return fc
+    else:
+        dropout = Dropout(rate=p, name='%s_dropout' % name)(fc)
+        return dropout
+
+def model_deepDoubleBReference(inputs, num_classes, num_regclasses, datasets = ['db','cpf','SV'], removedVars = None):
+    """
+    reference 1x1 convolutional model for 'deepDoubleB'
+    with recurrent layers and batch normalisation
+    """
+    kernel_initializer = 'he_normal'
+    kernel_initializer_fc = 'lecun_uniform'
+    normalizedInputs = []
+
+    for i in range(len(inputs)):
+        normedLayer = BatchNormalization(momentum=0.3,name = '%s_input_batchnorm'%datasets[i])(inputs[i])
+        normalizedInputs.append(normedLayer)
+
+    flattenLayers = []
+    flattenLayers.append(Flatten()(normalizedInputs[0]))
+
+    for ds, normalizedInput in zip(datasets[1:],normalizedInputs[1:]):                
+        x = Conv1D(filters=32, kernel_size=(1,), strides=(1,), padding='same', 
+                                kernel_initializer=kernel_initializer, use_bias=False, name='%s_conv1'%ds, 
+                                activation = 'relu')(normalizedInput)
+        x = SpatialDropout1D(rate=0.1)(x)
+        x = Conv1D(filters=32, kernel_size=(1,), strides=(1,), padding='same', 
+                             kernel_initializer=kernel_initializer, use_bias=False, name='%s_conv2'%ds, 
+                             activation = 'relu')(x)
+        x = SpatialDropout1D(rate=0.1)(x)
+        x = GRU(50,go_backwards=True,implementation=2,name='%s_gru'%ds)(x)
+        x = Dropout(rate=0.1)(x)
+        flattenLayers.append(x)
+
+    concat = Concatenate()(flattenLayers)
+
+
+    fc = FC(concat, 100, p=0.1, name='fc1')
+    output = Dense(num_classes, activation='softmax', name='ID_pred', kernel_initializer=kernel_initializer_fc)(fc)
+                            
+    model = Model(inputs=inputs, outputs=[output])
+
+    return model
+
