@@ -100,6 +100,8 @@ class TrainData_VHbb_bdt(TrainData_VHbb):
                                           self.branches[0],
                                           self.branchcutoffs[0],self.nsamples)
 
+	x_dbr  = ZeroPadParticles(filename,TupleMeanStd, self.branches[1], self.branchcutoffs[1],self.nsamples)
+
         x_db  = MeanNormZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
@@ -144,7 +146,7 @@ class TrainData_VHbb_bdt(TrainData_VHbb):
         # fill everything
         self.w=[weights]
         self.x=[x_db]
-        self.z=[x_glb]
+        self.z=[x_glb, x_dbr]
         self.y=[alltruth]
 
         

@@ -4,7 +4,7 @@ DeepJet: Repository for training and evaluation of deep neural networks for Jet 
 ===============================================================================
 
 This package depends on DeepJetCore - original at (https://github.com/DL4Jets/DeepJetCore)
-For Maxwell get https://github.com/anovak10/DeepJetCore and follow the setup
+For Maxwell Cluster in DESY and working with RWTH get https://github.com/anovak10/DeepJetCore and follow the setup
 
 Setup
 ==========
@@ -24,17 +24,20 @@ To run interactively:
 salloc -N 1 --partition=all --constraint=GPU --time=<minutes>
 ```
 
-Alternatively add the following to your .bashrc to get allocation for x hours with getgpu x
+Alternatively add the following to your .bashrc to get allocation for x hours with ``` getgpu x ```
 ```
-getgpu () {
-   salloc -N 1 --partition=all --constraint=GPU --time=$((60 * $1))
-}
+ getgpu () {
+    salloc -N 1 --partition=all --constraint=GPU --time=$((60 * $1))
+ }
 ```
 
-ssh to the machine that was allocated to you
+ssh to the machine that was allocated to you. For example
 ```
-cd <your working dir>/DeepJet
-source gpu_env.sh
+ ssh max-wng001
+```
+```
+ cd <your working dir>/DeepJet
+ source gpu_env.sh
 ```
 
 
@@ -54,17 +57,18 @@ The preparation for the training consists of the following steps
   python list_writer.py --train <path/to/directory/of/files/train> --test <path/to/directory/of/files/test>
 ``` 
 Example use:
-```
- INDIR=run #Make a directory for the run
- convertFromRoot.py -i train_list.txt -o $INDIR/dctrain -c TrainData_VHbb_bdt```
+ ```
+ mkdir run
+ INDIR=run # Make a variable for a parent directory
+ convertFromRoot.py -i train_list.txt -o $INDIR/dctrain -c TrainData_deepDoubleC_db_cpf_sv_reduced
 ```
 Training
 ====
 
 Run the training (for now BTrain for beta)
 ```
-cd Train
-python BTrain.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training  --batch 256 --epochs 100
+ cd Train
+ python BTrain.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training  --batch 1024 --epochs 50
 
 ```
 Evaluation
@@ -75,28 +79,38 @@ The evaluation consists of a few steps:
 
 1) converting the test data
 ```
-cd ..
-convertFromRoot.py -i test_list.txt -o $INDIR/dctest --testdatafor $INDIR/training/trainsamples.dc
+ cd ..
+ convertFromRoot.py -i test_list.txt -o $INDIR/dctest --testdatafor $INDIR/training/trainsamples.dc
 ```
 
 2) Evaluate
 
 ```
-cd Train
-python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/eval
+ cd Train
+ python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/eval
 ```
 
 Output .pkl file and some plots will be stored in $INDIR/eval
 
 To use Maxwell Batch
 ====
-Example config file can be found in run/BDT.sh
+Example config file can be found in run/
 ```
-sbatch run/BDT.sh
+ # To run binary Hcc vs QCD training
+ sbatch run/baseDDC.sh
 
-tail -f run/bdt-<jobid>.out # To see job output updated in real time
-squeue -u username # To display queue
-scancel jobid # To cancel job
+ # To run binary Hcc vs Hbb training
+ sbatch run/baseDDCvB.sh
+
+ # To run multiclassifier for Hcc, Hbb, QCD (gcc, gbb, Light)
+ sbatch run/basemulti.sh
+
+ # To see job output updated in real time
+ tail -f run/run-<jobid>.out 
+ # To show que
+ squeue -u username 
+ # To cancel a job 
+ scancel jobid # To cancel job
 ```
 
 

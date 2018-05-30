@@ -47,7 +47,7 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
 
     return evalModel
 
-def evaluate(testd, model, outputDir):
+def evaluate(testd, trainData, model, outputDir):
     	NENT = 1  # Can skip some events
     	filelist=[]
         i=0
@@ -70,25 +70,35 @@ def evaluate(testd, model, outputDir):
 	labels_val=testd.getAllLabels()[0][::NENT,:]
         features_val=testd.getAllFeatures()[0][::NENT,0,:]
         spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
+        raw_features_val = testd.getAllSpectators()[-1][::NENT,0,:]
 	# Labels
-	feature_names = testd.dataclass.branches[-1]
+	print testd.dataclass.branches
+	feature_names = testd.dataclass.branches[1]
 	spectator_names = testd.dataclass.branches[0]
-        truthnames = testd.getUsedTruth()
-                         
+        #truthnames = testd.getUsedTruth()
+        
+	from DeepJetCore.DataCollection import DataCollection                 
+    	traind=DataCollection()
+	traind.readFromFile(trainData)
+	truthnames = traind.getUsedTruth()
 	# Store features                                                               
         df = pd.DataFrame(spectators_val)
         df.columns = [spectator_names]
 
 	for i, tname in enumerate(feature_names):
-		df[tname] = features_val[:,i]
+		df[tname] = raw_features_val[:,i]
 
 	# Add predictions
+	print truthnames
+	print predict_test.shape
 	for i, tname in enumerate(truthnames):
 		df['truth'+tname] = labels_val[:,i]
 		df['predict'+tname] = predict_test[:,i]
 
 	df.to_pickle(outputDir+'/output.pkl')    #to save the dataframe, df to 123.pkl
-
+	print df
+	dt = pd.read_pickle(outputDir+'/output.pkl')
+	print dt
 
 	def dists(xdf, truthnames):
     		truths = truthnames
@@ -115,5 +125,5 @@ def evaluate(testd, model, outputDir):
 	print "Testing prediction:"
 	print "Total: ", len(predict_test[:,0])
 	for lab in truthnames:
-		print lab, ":", sum(df[lab].values)
-	
+		print lab, ":", sum(df['truth'+lab].values)
+	print "Finished"	

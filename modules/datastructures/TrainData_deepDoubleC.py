@@ -30,7 +30,7 @@ class TrainData_deepDoubleC(TrainData):
                 600,700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000],dtype=float)
 
         self.weight_binY = numpy.array(
-            [40,200],
+            [40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190200],
             dtype=float
             )
 
@@ -53,6 +53,7 @@ class TrainData_deepDoubleC(TrainData):
             return numpy.vstack((q,h)).transpose()  
         
 class TrainData_deepDoubleC_db(TrainData_deepDoubleC):
+    # NOT UP TO DATA 
     
     def __init__(self):
         '''
@@ -197,7 +198,7 @@ class TrainData_deepDoubleC_db(TrainData_deepDoubleC):
 #######################################
             
 class TrainData_deepDoubleC_db_pf_cpf_sv(TrainData_deepDoubleC):
-    
+   # NOT UP TO DATA 
     def __init__(self):
         '''
         This is an example data format description for FatJet studies
@@ -352,7 +353,7 @@ class TrainData_deepDoubleC_db_pf_cpf_sv(TrainData_deepDoubleC):
         x_db  = MeanNormZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
-        
+
         #x_pf  = MeanNormZeroPadParticles(filename,TupleMeanStd,
         #                                 self.branches[2],
         #                                 self.branchcutoffs[2],self.nsamples)
@@ -540,15 +541,19 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
                                           self.branches[0],
                                           self.branchcutoffs[0],self.nsamples)
 
-        x_db  = ZeroPadParticles(filename,TupleMeanStd,
+        x_db  = MeanNormZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
-        
-        x_cpf = ZeroPadParticles(filename,TupleMeanStd,
+       
+        x_db_raw  = ZeroPadParticles(filename,TupleMeanStd,
+                                         self.branches[1],
+                                         self.branchcutoffs[1],self.nsamples)
+ 
+        x_cpf = MeanNormZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[2],
                                          self.branchcutoffs[2],self.nsamples)
         
-        x_sv = ZeroPadParticles(filename,TupleMeanStd,
+        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
                                         self.branches[3],
                                         self.branchcutoffs[3],self.nsamples)
         
@@ -565,31 +570,33 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
         if self.weight:
             weights=weighter.getJetWeights(Tuple)
         elif self.remove:
-            weights=notremoves
+            weights=notremoves #weighter.createNotRemoveIndices(Tuple)
         else:
             print('neither remove nor weight')
             weights=numpy.empty(self.nsamples)
             weights.fill(1.)
-            
-            
-        # create all collections:
-        #truthtuple =  Tuple[self.truthclasses]
-        alltruth=self.reduceTruth(Tuple)
-        undef=numpy.sum(alltruth,axis=1)
-        weights=weights[undef > 0]
-        x_glb=x_glb[undef > 0]
-        x_db=x_db[undef > 0]
-        x_sv=x_sv[undef > 0]
-        x_cpf=x_cpf[undef > 0]
-        alltruth=alltruth[undef > 0]
+	    
 
-        # remove the entries to get same jet shapes
+	truthtuple =  Tuple[self.truthclasses]
+        alltruth=self.reduceTruth(Tuple)
+	undef=numpy.sum(alltruth,axis=1)
+            
         if self.remove:
-            print('remove')
+	    print('remove')
+	    weights=weights[undef > 0]
+            x_glb=x_glb[undef > 0]
+	    x_db=x_db[undef > 0]
+	    x_db_raw=x_db_raw[undef > 0]
+	    x_sv=x_sv[undef > 0]
+	    x_cpf=x_cpf[undef > 0]
+	    alltruth=alltruth[undef > 0]
+
+            # remove the entries to get same jet shapes
             notremoves=notremoves[undef > 0]
             weights=weights[notremoves > 0]
             x_glb=x_glb[notremoves > 0]
             x_db=x_db[notremoves > 0]
+            x_db_raw=x_db_raw[notremoves > 0]
             x_sv=x_sv[notremoves > 0]
             x_cpf=x_cpf[notremoves > 0]
             alltruth=alltruth[notremoves > 0]
@@ -602,7 +609,7 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
         # fill everything
         self.w=[weights]
         self.x=[x_db,x_cpf,x_sv]
-        self.z=[x_glb]
+        self.z=[x_glb, x_db_raw]
         self.y=[alltruth]
 
     def reduceTruth(self, tuple_in):

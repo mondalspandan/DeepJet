@@ -42,5 +42,5 @@ if True:
     else:
         os.mkdir(evalDir)
 
-    df = evaluate(testd, evalModel, evalDir)
+    df = evaluate(testd, inputTrainDataCollection, evalModel, evalDir)
     
