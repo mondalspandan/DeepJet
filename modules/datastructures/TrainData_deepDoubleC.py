@@ -15,30 +15,38 @@ class TrainData_deepDoubleC(TrainData):
         #define truth:
 	self.treename = "deepntuplizer/tree"
         self.undefTruth=['isUndefined']
-        self.truthclasses=['fj_isNonCC', 'fj_isCC', 'fj_isNonBB']
-        self.referenceclass='fj_isNonCC' ## used for pt reshaping
+        self.truthclasses=['fj_isNonCC', 'fj_isCC', 'fj_isNonBB', 'fj_isQCD', 'fj_isH']
+        self.truthclasses=['fj_isCC', 'fj_isBB', 'fj_isQCD' ]
+        self.truthclasses=["label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others"]
+        #self.truthclasses=["fj_isCC", "fj_isNonCC"]
+        #self.referenceclass='label_H_cc' ## used for pt reshaping
+        self.referenceclass='lowest' ## used for pt reshaping
+        #self.referenceclass='flatten' ## used for pt reshaping
         self.registerBranches(['fj_pt','fj_sdmass'])
 
         self.weightbranchX='fj_pt'
         self.weightbranchY='fj_sdmass'
 
         #self.weight_binX = numpy.array([
-        #        300,2500],dtype=float)
-	self.weight_binX = numpy.array([
-                10,25,30,35,40,45,50,60,75,100,
-                125,150,175,200,250,300,400,500,
-                600,700, 800, 900, 1000, 1200, 1400, 1600, 1800, 2000],dtype=float)
+        #        300,1000,2500],dtype=float)
+	self.weight_binX = numpy.array(
+                #[300,400,500,600,700, 800, 900, 1000, 
+		#1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000]
+		range(300,1000,50)+range(1000,2600,200),dtype=float)
 
         self.weight_binY = numpy.array(
-            [40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190200],
+            [40,200],
+            #range(40,200,40),
             dtype=float
             )
+	self.weight=True
+	self.remove=False
 
         #this is only needed because the truth definitions are different from deepFlavour
         self.allbranchestoberead=[]
         self.registerBranches(self.undefTruth)
         self.registerBranches(self.truthclasses)
-        self.registerBranches(['fj_isBB', 'fj_isNonBB'])
+        self.registerBranches(['fj_isBB', 'fj_isNonBB', 'fj_isNonCC', 'fj_isCC', 'fj_isQCD', 'fj_isH'])
         print("Branches read:", self.allbranchestoberead)
         
     ## categories to use for training     
@@ -53,7 +61,7 @@ class TrainData_deepDoubleC(TrainData):
             return numpy.vstack((q,h)).transpose()  
         
 class TrainData_deepDoubleC_db(TrainData_deepDoubleC):
-    # NOT UP TO DATA 
+    # NOT UP TO DATE 
     
     def __init__(self):
         '''
@@ -198,7 +206,7 @@ class TrainData_deepDoubleC_db(TrainData_deepDoubleC):
 #######################################
             
 class TrainData_deepDoubleC_db_pf_cpf_sv(TrainData_deepDoubleC):
-   # NOT UP TO DATA 
+   # NOT UP TO DATE
     def __init__(self):
         '''
         This is an example data format description for FatJet studies
@@ -452,6 +460,11 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
                           'fj_doubleb',
                           'fj_tau21',
                           'fj_tau32',
+			  # Doesn't work, bad file type - int not, float
+                          #'fj_isH',
+                          #'fj_isQCD',
+                          #'fj_isCC',
+                          #'fj_isBB',
                           'npv',
                           'npfcands',
                           'ntracks',
@@ -560,10 +573,10 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
         # now, some jets are removed to avoid pt and eta biases
         
         Tuple = self.readTreeFromRootToTuple(filename)
-        #if self.remove:
+        if self.remove or self.weight:
             # jets are removed until the shapes in eta and pt are the same as
             # the truth class 'fj_isNonBB'
-        notremoves=weighter.createNotRemoveIndices(Tuple)
+            notremoves=weighter.createNotRemoveIndices(Tuple)
             #undef=Tuple[self.undefTruth]
         #notremoves-=undef
         
@@ -606,6 +619,12 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
         print('reduced content to ', int(float(newnsamp)/float(self.nsamples)*100),'%')
         self.nsamples = newnsamp
         
+	#print("Subsample composition:")
+        #for lab in ['fJ_isQCD', 'fj_isH', 'fj_isCC', 'fj_isBB']:
+	#	print(numpy.sum((Tuple[lab].view(numpy.ndarray))), lab)	
+        #for lab, stat in zip(self.reducedtruthclasses, stats):
+	#	print(lab, ': {}%'.format(stat))
+
         # fill everything
         self.w=[weights]
         self.x=[x_db,x_cpf,x_sv]
@@ -618,9 +637,23 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced(TrainData_deepDoubleC):
         if tuple_in is not None:
             q = tuple_in['fj_isQCD']
             q = q.view(numpy.ndarray)
-            h = tuple_in['fj_isCC'] * tuple_in['fj_isH']
+            #h = tuple_in['fj_isCC'] * tuple_in['fj_isH']
+            h = tuple_in['fj_isH']
             h = h.view(numpy.ndarray)
 
+            return numpy.vstack((q,h)).transpose()
+
+
+class TrainData_deepDoubleC_db_cpf_sv_reduced_incglu(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    ## categories to use for training
+    def reduceTruth(self, tuple_in):
+        import numpy
+        self.reducedtruthclasses=['Light','cc']
+        if tuple_in is not None:
+            q = tuple_in['fj_isNonCC'] * tuple_in['fj_isQCD'] * tuple_in['fj_isNonBB'] 
+            q = q.view(numpy.ndarray)
+            h = tuple_in['fj_isCC'] 
+            h = h.view(numpy.ndarray)
             return numpy.vstack((q,h)).transpose()
 
 
@@ -666,6 +699,17 @@ class TrainData_deepDoubleCvB_db_cpf_sv_reduced(TrainData_deepDoubleC_db_cpf_sv_
             h = h.view(numpy.ndarray)
             return numpy.vstack((q,h)).transpose()
 
+class TrainData_deepDoubleCvB_db_cpf_sv_reduced_incglu(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    ## categories to use for training
+    def reduceTruth(self, tuple_in):
+        import numpy
+        self.reducedtruthclasses=['bb','cc']
+        if tuple_in is not None:
+            q = tuple_in['fj_isBB'] 
+            q = q.view(numpy.ndarray)
+            h = tuple_in['fj_isCC'] 
+            h = h.view(numpy.ndarray)
+            return numpy.vstack((q,h)).transpose()
 
 #######################################
 #        double-b vs QCD
@@ -745,7 +789,91 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue(TrainData_deepDoubleC_db
             q2 = tuple_in['fj_isBB'] * tuple_in['fj_isQCD']
             h1 = h1.view(numpy.ndarray)
             h2 = h2.view(numpy.ndarray)
-            return numpy.vstack((q,h1, h2, q1, q2)).transpose()
+            q1 = q1.view(numpy.ndarray)
+            q2 = q2.view(numpy.ndarray)
+	    #stats = numpy.around(numpy.array([numpy.sum(q),numpy.sum(h1),numpy.sum(h2),numpy.sum(q1), numpy.sum(q2)])/float(len(h1))*100)
+	    #print('Final stats - Light:{}% , Hcc:{}% , Hbb:{}% , gcc:{}% , gbb:{}%'.format(*stats), "Total evts kept: {}".format(len(q)))
+	    #print("Sample composition:")
+            #for lab, stat in zip(self.reducedtruthclasses, stats):
+	    #	print(lab, ': {}%'.format(stat))
+	    return numpy.vstack((q,h1, h2, q1, q2)).transpose()
 
+class TrainData_deepDoubleC_flatten(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+	self.weight=True
+	self.remove=False
+	self.referenceclass='flatten'
+	self.truthclasses=["fj_isH", "fj_isQCD"]
 
-        
+class TrainData_deepDoubleC_lowest(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+	self.weight=True
+	self.remove=False
+	self.referenceclass='lowest'
+	self.truthclasses=["fj_isH", "fj_isQCD"]
+
+class TrainData_deepDoubleC_Hcc(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+	self.weight=True
+	self.remove=False
+    	self.referenceclass='fj_isH'
+	self.truthclasses=["fj_isH", "fj_isQCD"]
+
+class TrainData_deepDoubleC_bkg(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+	self.weight=True
+	self.remove=False
+        self.referenceclass='fj_isQCD'
+	self.truthclasses=["fj_isH", "fj_isQCD"]
+
+class TrainData_deepDoubleCvB_flatten(TrainData_deepDoubleCvB_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='flatten'
+	self.truthclasses=["fj_isCC", "fj_isBB"]
+
+class TrainData_deepDoubleCvB_lowest(TrainData_deepDoubleCvB_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='lowest'
+	self.truthclasses=["fj_isCC", "fj_isBB"]
+
+class TrainData_deepDoubleCvB_Hcc(TrainData_deepDoubleCvB_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='fj_isCC'
+	self.truthclasses=["fj_isCC", "fj_isBB"]
+       
+class TrainData_deepDoubleCvB_bkg(TrainData_deepDoubleCvB_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='fj_isBB'
+        self.truthclasses=["fj_isCC", "fj_isBB"]
+ 
+class TrainData_deepDoubleC_multiflatten(TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='flatten'
+        self.truthclasses=["label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others"]
+
+class TrainData_deepDoubleC_multilowest(TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='lowest'
+        self.truthclasses=["label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others"]
+
+class TrainData_deepDoubleC_multiHcc(TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='label_H_cc'
+        self.truthclasses=["label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others"]
+
+class TrainData_deepDoubleC_multibkg(TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue):
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+        self.referenceclass='label_QCD_cc'
+        self.truthclasses=["label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others"]
