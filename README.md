@@ -47,15 +47,15 @@ The preparation for the training consists of the following steps
 - define the data structure for the training (example in modules/datastructures/TrainData_template.py)
   for simplicity, copy the file to TrainData_template.py and adjust it. 
   Define a new class name (e.g. TrainData_template), leave the inheritance untouched
-  ```  
+```  
 - convert the root file to the data strucure for training using DeepJetCore tools:
-  ```
+```
 convertFromRoot.py -i /path/to/the/root/ntuple/list_of_root_files.txt -o /output/path/that/needs/some/disk/space -c TrainData_myclass
-  ```
+```
 - You can use the following script to create the lists (if you store the files in a train and test directory within one parent you can only specify test
-  ```
+```
   python list_writer.py --train <path/to/directory/of/files/train> --test <path/to/directory/of/files/test>
-  ``` 
+``` 
 Example use:
 ```
 mkdir run
