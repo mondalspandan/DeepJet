@@ -828,6 +828,15 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue(TrainData_deepDoubleC_db
 	    #	print(lab, ': {}%'.format(stat))
 	    return numpy.vstack((q,h1, h2, q1, q2)).transpose()
 
+class TrainData_deepDoubleB_lowest(TrainData_deepDoubleBvQCD_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_deepDoubleBvQCD_db_cpf_sv_reduced.__init__(self)
+	self.weight=True
+	self.remove=False
+	self.referenceclass='lowest'
+	self.truthclasses=["fj_isH", "sample_isQCD"]
+
+
 class TrainData_deepDoubleC_flatten(TrainData_deepDoubleC_db_cpf_sv_reduced):
     def __init__(self):
         TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
