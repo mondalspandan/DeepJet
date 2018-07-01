@@ -1,15 +1,9 @@
-#! /bin/bash
+
+export DEEPJETCORE=../DeepJetCore
 
 THISDIR=`pwd`
-export DEEPJET=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)
-export DEEPJETCORE=$DEEPJET/../DeepJetCore
 cd $DEEPJETCORE
-if command -v nvidia-smi > /dev/null
-then
-		source gpu_env.sh
-else
-		source lxplus_env.sh
-fi
-cd $DEEPJET
-export PYTHONPATH=`pwd`/modules:$PYTHONPATH
+source gpu_env.sh
 cd $THISDIR
+export PYTHONPATH=`pwd`/modules:$PYTHONPATH
+export DEEPJET=`pwd`
