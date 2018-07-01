@@ -47,7 +47,6 @@ global_loss_list['loss_kldiv']=loss_kldiv
 
 def weighted_loss(loss_function, clipmin = 0., clipmax = None):
     """
-    
     A function to get a weighted loss, where the weights comes from the NN output. This is useful with repect to the standard way to add sample weights in Keras,
     as the weight corrections can be an model parameter of the NN. Thus one can "fit" weigths.
     One can as well change the weight for samples during training if one wants to have the weights as input to the NN and learn the NN dependency on the weights
