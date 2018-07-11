@@ -63,44 +63,33 @@ def loadModel(inputDir,trainData,model,LoadModel,forceNClasses = False, NClasses
 
 
 def makePlots(testd, model,outputDir,signals = [1], sigNames = ["Hbb"], backgrounds = [0],backNames = ["qcd"]):
-    print 'in makeRoc()'
 
-
-    NENT = 1
-    
-    print testd.nsamples
     filelist=[]
     i=0
-    for s in testd.samples[0:10]:
     #for s in testd.samples:
-        spath = testd.getSamplePath(s)
-        print spath
-        filelist.append(spath)
-        h5File = h5py.File(spath)
-        features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
-        predict_test_i = model.predict(features_val)
-        labels_val_i = h5File['y0'][()][::NENT,:]
-        spectators_val_i = h5File['z0'][()][::NENT,0,:]
-        if i==0:
-            predict_test = predict_test_i
-            labels_val = labels_val_i
-            spectators_val = spectators_val_i
-        else:
-#            if type(predict_test) is list:
-#                predict_test = [np.concatenate((p_t,p_t_i)) for p_t, p_t_i in zip(predict_test,predict_test_i)]
-#            else:
-            predict_test = np.concatenate((predict_test,predict_test_i))
-            labels_val = np.concatenate((labels_val, labels_val_i))
-            spectators_val = np.concatenate((spectators_val, spectators_val_i))
-        i+=1
-     
-    #objects =testd.getAllLabelsFeaturesSpectators()
-    #labels_val=objects[1][0][::NENT,:]
-    #spectators_val = objects[2][0][::NENT,0,:]
+    #    spath = testd.getSamplePath(s)
+    #    print spath
+    #    filelist.append(spath)
+    #    h5File = h5py.File(spath)
+    #    features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
+    #    predict_test_i = model.predict(features_val)
+    #    labels_val_i = h5File['y0'][()][::NENT,:]
+    #    spectators_val_i = h5File['z0'][()][::NENT,0,:]
+    #    if i==0:
+    #        predict_test = predict_test_i
+    #        labels_val = labels_val_i
+    #        spectators_val = spectators_val_i
+    #    else:
+    #        predict_test = np.concatenate((predict_test,predict_test_i))
+    #        labels_val = np.concatenate((labels_val, labels_val_i))
+    #        spectators_val = np.concatenate((spectators_val, spectators_val_i))
+    #    i+=1
     
     # get all files
-    #labels_val=testd.getAllLabels()[0][::NENT,:]
-    #spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
+    features_val = testd.getAllFeatures()
+    labels_val = testd.getAllLabels()[0]
+    spectators_val = testd.getAllSpectators()[0][:,0,:]
+    predict_test = model.predict(features_val)
 
     df = pd.DataFrame(spectators_val)
     df.columns = ['fj_pt',
@@ -335,41 +324,39 @@ def makeLossPlot(inputDir, outputDir):
     plt.savefig("%s/loss.pdf"%outputDir)
     
 def makeComparisonPlots(testds, models,names, outputDir):
-
-
-# let's use all entries
-    NENT = 1
     
     filelist=[]
 
     predictions = []
     dfs = []
+
+    
     for i in range(len(models)):
         model = models[i]
         testd = testds[i]
-        first = True
-        for s in testd.samples:
-            spath = testd.getSamplePath(s)
-            print spath
-            filelist.append(spath)
-            h5File = h5py.File(spath)
-            features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
-            predict_test_i = model.predict(features_val)
-            if first:
-                predict_test = predict_test_i
-                first=False
-            else:
-
-                if type(predict_test) is list:
-                    predict_test = [np.concatenate((p_t,p_t_i)) for p_t, p_t_i in zip(predict_test,predict_test_i)]
-                else:
-                    predict_test = np.concatenate((predict_test,predict_test_i))
-            
+        #for s in testd.samples:
+        #    spath = testd.getSamplePath(s)
+        #    print spath
+        #    filelist.append(spath)
+        #    h5File = h5py.File(spath)
+        #    features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
+        #    predict_test_i = model.predict(features_val)
+        #    if first:
+        #        predict_test = predict_test_i
+        #        first=False
+        #    else:
+        #
+        #        if type(predict_test) is list:
+        #            predict_test = [np.concatenate((p_t,p_t_i)) for p_t, p_t_i in zip(predict_test,predict_test_i)]
+        #        else:
+        #            predict_test = np.concatenate((predict_test,predict_test_i))
+        #
+        features_val = testd.getAllFeatures()
+        labels_val = testd.getAllLabels()[0]
+        spectators_val = testd.getAllSpectators()[0][:,0,:]
+        predict_test = model.predict(features_val)
         predictions.append(predict_test)
-        labels_val=testd.getAllLabels()[0][::NENT,:]
-                                                                                        
-        spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
-    
+
 
 
     dfs = []
