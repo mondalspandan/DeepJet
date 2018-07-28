@@ -13,6 +13,7 @@ def make_plots(outputDir, savedir="Plots"):
 	dt = pd.read_pickle(outputDir+'/output.pkl')
 	labels =  list(dt.columns)
 	truthnames = [label[len("truth"):] for label in labels if label.startswith("truth")]
+        print(truthnames)
 	def cut(tdf):
 		ptlow, pthigh = 300, 2500
 		mlow, mhigh = 40, 200
@@ -39,7 +40,7 @@ def make_plots(outputDir, savedir="Plots"):
 	    labels =  xdf.columns
 	    truths = [label[len("truth"):] for label in labels if label.startswith("truth")]
 	    print "Labels: ", truths
-	    def distribution(xdf, predict="Hcc", log=False):
+	    def distribution(xdf, predict="Hbb", log=False):
 	        plt.figure(figsize=(10,7))
 	        bins = np.linspace(0,1,70)
 	        trus = []
@@ -57,7 +58,7 @@ def make_plots(outputDir, savedir="Plots"):
 	        if log: plt.savefig(os.path.join(savedir,'LogProbability_'+predict+'.png'), dpi=400)
 	        else:plt.savefig(os.path.join(savedir,'Probability_'+predict+'.png'), dpi=400)
             
-	    def overlay_distribution(xdf, predict="Hcc"):
+	    def overlay_distribution(xdf, predict="Hbb"):
 	        plt.figure(figsize=(10,7))
 	        bins = np.linspace(0,1,70)
 	        trus = []
@@ -99,7 +100,7 @@ def make_plots(outputDir, savedir="Plots"):
 	    db(xdf)
 	    db(xdf, log=True)
 
-        def roc_input(xdf, signal=["HCC"], include = ["HCC", "Light", "gBB", "gCC", "HBB"]):       
+        def roc_input(xdf, signal=["HBB"], include = ["HCC", "Light", "gBB", "gCC", "HBB"]):       
             # Bkg def - filter unwanted
             bkg = np.zeros(len(eval("xdf.truth"+include[0])))
             for label in include:
@@ -126,7 +127,7 @@ def make_plots(outputDir, savedir="Plots"):
 		if len(sculp_label) > 0: bkg = [sculp_label]
                 truth, predict, db =  roc_input(frame, signal=sig, include = sig+bkg)
             else:
-                sig = ["Hcc"]
+                sig = ["Hbb"]
                 bkg = [l for l in labels if l not in sig]
 		if len(sculp_label) > 0: bkg = [sculp_label]
                 truth, predict, db =  roc_input(frame, signal=sig, include = sig+bkg)
@@ -157,7 +158,7 @@ def make_plots(outputDir, savedir="Plots"):
             labels =  tdf.columns
             labels = [label[len("truth"):] for label in labels if label.startswith("truth")]
 
-            truth, predict, db = roc_input(tdf, signal=["Hcc"], include = ["Hcc", sculp_label])
+            truth, predict, db = roc_input(tdf, signal=["Hbb"], include = ["Hbb", sculp_label])
             fpr, tpr, threshold = roc_curve(truth, predict)
 
             cuts = {}
@@ -168,7 +169,7 @@ def make_plots(outputDir, savedir="Plots"):
             plt.figure(figsize=(10,7))
             bins = np.linspace(40,200,41)
             for wp, cut in reversed(sorted(cuts.iteritems())):
-		ctdf = tdf.loc[tdf.predictHcc.values > cut ]
+		ctdf = tdf.loc[tdf.predictHbb.values > cut ]
                 weight = ctdf['truth'+sculp_label].values
                 plt.hist(ctdf['fj_sdmass'].values, bins=bins, weights = weight, normed=True,histtype='step',label=sculp_label+' %i%% mis-tag'%(float(wp)*100.))
 
@@ -180,7 +181,7 @@ def make_plots(outputDir, savedir="Plots"):
             bins = np.linspace(300,2500,41)
             for wp, cut in reversed(sorted(cuts.iteritems())):
 
-                ctdf = tdf.loc[tdf.predictHcc.values > cut ]
+                ctdf = tdf.loc[tdf.predictHbb.values > cut ]
  	        weight = ctdf['truth'+sculp_label].values
 		#print weight
 		#print ctdf['fj_pt'].values.transpose()[0]
@@ -198,7 +199,7 @@ def make_plots(outputDir, savedir="Plots"):
         def pt_dep(xdf, bkg_label="", savedir=savedir):
             def roc(xdf, ptlow=300, pthigh=2500, verbose=False):
                 tdf = xdf[(xdf.fj_pt < pthigh) & (xdf.fj_pt>ptlow)]
-            	truth, predict, db = roc_input(tdf, signal=["Hcc"], include = ["Hcc", bkg_label])
+            	truth, predict, db = roc_input(tdf, signal=["Hbb"], include = ["Hbb", bkg_label])
 	        fpr, tpr, threshold = roc_curve(truth, predict)
                 return fpr, tpr
 
@@ -250,7 +251,7 @@ def make_plots(outputDir, savedir="Plots"):
             labels =  xdf.columns
             truths = [label[len("truth"):] for label in labels if label.startswith("truth")]
             print "Labels: ", truths
-            def distribution(xdf, predict="Hcc", log=False):
+            def distribution(xdf, predict="Hbb", log=False):
                 plt.figure(figsize=(10,7))
                 trus = []
                 for tru in truths:

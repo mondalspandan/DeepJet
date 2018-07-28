@@ -1,11 +1,49 @@
 from keras import backend as K
 from tensorflow import where, greater, abs, zeros_like, exp
 import tensorflow as tf
+from keras.losses import kullback_leibler_divergence, categorical_crossentropy
 
 global_loss_list={}
 
 #whenever a new loss function is created, please add it to the global_loss_list dictionary!
 
+NBINS=40 # number of bins for loss function
+MMAX = 200. # max value
+MMIN = 40. # min value
+LAMBDA = 0.1 # lambda for penalty
+
+def loss_kldiv(y_in,x):
+    """
+    mass sculpting penlaty term usking kullback_leibler_divergence
+    y_in: truth [h, y]
+    x: predicted NN output for y
+    h: the truth mass histogram vector "one-hot encoded" (length NBINS=40)
+    y: the truth categorical labels  "one-hot encoded" (length NClasses=2)
+    """
+    h = y_in[:,0:NBINS]
+    y = y_in[:,NBINS:NBINS+2]
+    h_all = K.dot(K.transpose(h), y)
+    h_all_q = h_all[:,0]
+    h_all_h = h_all[:,1]
+    h_all_q = h_all_q / K.sum(h_all_q,axis=0)
+    h_all_h = h_all_h / K.sum(h_all_h,axis=0)
+    h_btag_anti_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))
+    h_btag_anti_h = K.dot(K.transpose(h), K.dot(tf.diag(y[:,1]),x))
+    h_btag_q = h_btag_anti_q[:,1]
+    h_btag_q = h_btag_q / K.sum(h_btag_q,axis=0)
+    h_anti_q = h_btag_anti_q[:,0]
+    h_anti_q = h_anti_q / K.sum(h_anti_q,axis=0)
+    h_btag_h = h_btag_anti_h[:,1]
+    h_btag_h = h_btag_h / K.sum(h_btag_h,axis=0)
+    h_anti_h = h_btag_anti_q[:,0]
+    h_anti_h = h_anti_h / K.sum(h_anti_h,axis=0)
+
+    return categorical_crossentropy(y, x) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_q, h_anti_q) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_h, h_anti_h)         
+
+#please always register the loss function here                                                                                              
+global_loss_list['loss_kldiv']=loss_kldiv
 
 def weighted_loss(loss_function, clipmin = 0., clipmax = None):
     """

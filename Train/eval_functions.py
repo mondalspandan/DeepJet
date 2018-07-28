@@ -5,7 +5,6 @@ import tensorflow as tf
 
 from keras.losses import kullback_leibler_divergence, categorical_crossentropy
 from keras.models import load_model, Model
-from DeepJetCore.testing import testDescriptor
 from argparse import ArgumentParser
 from keras import backend as K
 from Losses import * #needed!
@@ -20,12 +19,11 @@ import pandas as pd
 import h5py
 NBINS=40
 
-sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
+#sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
+sess = tf.InteractiveSession()
 
 def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars=None):
     inputModel = '%s/KERAS_check_best_model.h5'%inputDir
-    # inputModel = '%s/KERAS_model.h5'%inputDir
-    inputWeights = '%s/KERAS_check_best_model_weights.h5' %inputDir
   
     from DeepJetCore.DataCollection import DataCollection
     traind=DataCollection()
@@ -43,7 +41,7 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
         for s in shapes:
             train_inputs.append(keras.layers.Input(shape=s))
         evalModel = model(train_inputs,traind.getNClassificationTargets(),traind.getNRegressionTargets(),sampleDatasets,removedVars)
-        evalModel.load_weights(inputWeights)
+        evalModel.load_weights(inputModel)
 
     return evalModel
 
@@ -52,6 +50,7 @@ def evaluate(testd, trainData, model, outputDir):
     	filelist=[]
         i=0
         for s in testd.samples:
+        #for s in testd.samples[0:1]:
             spath = testd.getSamplePath(s)
             filelist.append(spath)
             h5File = h5py.File(spath)
@@ -60,17 +59,27 @@ def evaluate(testd, trainData, model, outputDir):
             features_val = [h5File['x%i'%j][()] for j in range(0, h5File['x_listlength'][()][0])]
             #features_val=testd.getAllFeatures()
             predict_test_i = model.predict(features_val)
+            labels_val_i = h5File['y0'][()][::NENT,:]
+            spectators_val_i = h5File['z0'][()][::NENT,0,:]
+            raw_features_val_i = h5File['z1'][()][::NENT,0,:]
             if i==0:
                 predict_test = predict_test_i
+                labels_val = labels_val_i
+                spectators_val = spectators_val_i
+                raw_features_val = raw_features_val_i                                                    
             else:
                 predict_test = np.concatenate((predict_test,predict_test_i))
+                labels_val = np.concatenate((labels_val, labels_val_i))
+                spectators_val = np.concatenate((spectators_val, spectators_val_i))
+                raw_features_val = np.concatenate((raw_features_val, raw_features_val_i))
             i+=1
 
         # Value
-	labels_val=testd.getAllLabels()[0][::NENT,:]
-        features_val=testd.getAllFeatures()[0][::NENT,0,:]
-        spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
-        raw_features_val = testd.getAllSpectators()[-1][::NENT,0,:]
+	#labels_val=testd.getAllLabels()[0][::NENT,:]
+        #features_val=testd.getAllFeatures()[0][::NENT,0,:]
+        #spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
+        #raw_features_val = testd.getAllSpectators()[-1][::NENT,0,:]
+        
 	# Labels
 	print testd.dataclass.branches
 	feature_names = testd.dataclass.branches[1]
