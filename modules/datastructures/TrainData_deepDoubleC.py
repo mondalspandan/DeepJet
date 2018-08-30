@@ -47,7 +47,8 @@ class TrainData_deepDoubleC(TrainData):
         self.allbranchestoberead=[]
         self.registerBranches(self.undefTruth)
         self.registerBranches(self.truthclasses)
-        self.registerBranches(['fj_isBB', 'fj_isNonBB', 'fj_isNonCC', 'fj_isCC', 'fj_isQCD', 'fj_isH', "label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others"])
+        self.registerBranches(['fj_isBB', 'fj_isNonBB', 'fj_isNonCC', 'fj_isCC', 'fj_isQCD', 'fj_isH',
+				 "label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others", "fj_isZ", "label_Z_bb", "label_Z_cc",])
         print("Branches read:", self.allbranchestoberead)
         
     ## categories to use for training     
@@ -828,13 +829,44 @@ class TrainData_deepDoubleC_db_cpf_sv_reduced_multiglue(TrainData_deepDoubleC_db
 	    #	print(lab, ': {}%'.format(stat))
 	    return numpy.vstack((q,h1, h2, q1, q2)).transpose()
 
+class TrainData_deepDoubleC_allbkg(TrainData_deepDoubleC_db_cpf_sv_reduced):
+    ## categories to use for training     
+    def __init__(self):
+        TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
+	self.weight=True
+	self.remove=False
+        self.truthclasses=["label_H_bb", "label_H_cc", "label_QCD_bb",  "label_QCD_cc", "label_QCD_others", "label_Z_bb", "label_Z_cc" ]
+	self.referenceclass='lowest'
+	
+    def reduceTruth(self, tuple_in):
+        import numpy
+        self.reducedtruthclasses=['Light','Hcc', 'Hbb', 'Zcc', 'Zbb', 'gcc', 'gbb']
+        if tuple_in is not None:
+            q = tuple_in["fj_isQCD"] * tuple_in["fj_isNonCC"] * tuple_in["fj_isNonBB"] * tuple_in['sample_isQCD']
+            q = q.view(numpy.ndarray)
+            h1 = tuple_in['fj_isCC'] * tuple_in['fj_isH'] 
+            h2 = tuple_in['fj_isBB'] * tuple_in['fj_isH']
+            z1 = tuple_in['fj_isCC'] * tuple_in['fj_isZ'] 
+            z2 = tuple_in['fj_isBB'] * tuple_in['fj_isZ']
+            q1 = tuple_in['fj_isCC'] * tuple_in['fj_isQCD'] * tuple_in['sample_isQCD']
+            q2 = tuple_in['fj_isBB'] * tuple_in['fj_isQCD'] * tuple_in['sample_isQCD']
+            h1 = h1.view(numpy.ndarray)
+            h2 = h2.view(numpy.ndarray)
+            z1 = z1.view(numpy.ndarray)
+            z2 = z2.view(numpy.ndarray)
+            q1 = q1.view(numpy.ndarray)
+            q2 = q2.view(numpy.ndarray)
+	    return numpy.vstack((q,h1, h2, z1, z2, q1, q2)).transpose()
+
+
 class TrainData_deepDoubleB_lowest(TrainData_deepDoubleBvQCD_db_cpf_sv_reduced):
     def __init__(self):
         TrainData_deepDoubleBvQCD_db_cpf_sv_reduced.__init__(self)
 	self.weight=True
 	self.remove=False
 	self.referenceclass='lowest'
-	self.truthclasses=["fj_isH", "sample_isQCD"]
+	#self.truthclasses=["fj_isH", "sample_isQCD"]
+	self.truthclasses=["label_H_bb", "sample_isQCD"]
 
 
 class TrainData_deepDoubleC_flatten(TrainData_deepDoubleC_db_cpf_sv_reduced):
@@ -854,7 +886,8 @@ class TrainData_deepDoubleC_lowest(TrainData_deepDoubleC_db_cpf_sv_reduced):
 	self.referenceclass='lowest'
 	#self.truthclasses=["fj_isH", "fj_isQCD"]
 	#self.truthclasses=["fj_isCC", "fj_isNonCC"]  # used to get 90.5 auc
-	self.truthclasses=["fj_isH", "sample_isQCD"]
+	#self.truthclasses=["fj_isH", "sample_isQCD"]
+	self.truthclasses=["label_H_cc", "sample_isQCD"]
 
 class TrainData_deepDoubleC_Hcc(TrainData_deepDoubleC_db_cpf_sv_reduced):
     def __init__(self):
@@ -883,7 +916,8 @@ class TrainData_deepDoubleCvB_lowest(TrainData_deepDoubleCvB_db_cpf_sv_reduced):
     def __init__(self):
         TrainData_deepDoubleC_db_cpf_sv_reduced.__init__(self)
         self.referenceclass='lowest'
-	self.truthclasses=["fj_isCC", "fj_isBB"]
+	self.truthclasses=["label_H_cc", "label_H_bb"]
+	#self.truthclasses=["fj_isCC", "fj_isBB"]
 
 class TrainData_deepDoubleCvBmore_lowest(TrainData_deepDoubleCvB_db_pf_cpf_sv):
     def __init__(self):

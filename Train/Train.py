@@ -11,6 +11,8 @@ parser.add_argument("--batch",  help="Batch size, default = 2000", default=2000,
 parser.add_argument("--epochs",  help="Epochs, default = 50", default=50, metavar="INT")
 parser.add_argument("--resume", action='store_true', default=False, help="Continue previous")
 opts=parser.parse_args()
+if opts.decor:  os.environ['DECORRELATE'] = "True"
+else:  os.environ['DECORRELATE'] = "False"
 
 # Some used default settings
 class MyClass:
@@ -51,7 +53,7 @@ if True:
     print "nGPU:", multi_gpu
 	
 
-    train=training_base(splittrainandtest=0.9,testrun=False, resumeSilently=opts.resume, decorrelate=opts.decor, parser=args)
+    train=training_base(splittrainandtest=0.9,testrun=False, resumeSilently=opts.resume, parser=args)
     if not train.modelSet():
         train.setModel(trainingModel, 
 			datasets=inputDataset, 
