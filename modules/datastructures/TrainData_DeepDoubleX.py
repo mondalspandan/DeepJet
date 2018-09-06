@@ -738,6 +738,9 @@ class TrainData_DeepDoubleX_db_cpf_sv_reduced_3lab(TrainData_DeepDoubleX_db_cpf_
 
 #######################################
 class TrainData_DeepDoubleX_db_cpf_sv_reduced_5lab(TrainData_DeepDoubleX_db_cpf_sv_reduced):
+    def __init__(self):
+        TrainData_DeepDoubleX_db_cpf_sv_reduced.__init__(self)
+	self.ignore_when_weighting=['gbb']  # to be used only with weight reference 'lowest'
     ## categories to use for training     
     def reduceTruth(self, tuple_in):
         import numpy
@@ -802,6 +805,7 @@ class TrainData_DeepDoubleCvB_reference(TrainData_DeepDoubleCvB_db_cpf_sv_reduce
 class TrainData_DeepDoubleX_reference(TrainData_DeepDoubleX_db_cpf_sv_reduced_5lab):
     def __init__(self):
         TrainData_DeepDoubleX_db_cpf_sv_reduced_5lab.__init__(self)
+	self.ignore_when_weighting=['gbb']  # to be used only with weight reference 'lowest'
 	self.weight=True
 	self.remove=False
         self.referenceclass='lowest'
