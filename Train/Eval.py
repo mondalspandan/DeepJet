@@ -10,6 +10,7 @@ parser.add_argument("-d",  help="Training output dir", default=None, metavar="PA
 parser.add_argument("-o",  help="Eval output dir", default=None, metavar="PATH")
 parser.add_argument("-p",  help="Plot output dir within Eval output dir", default="Plots", metavar="PATH")
 parser.add_argument("--storeInputs", action='store_true', help="Store inputs in df", default=False)
+parser.add_argument("--taggerName",  help="DeepDouble{} name in ROC plots", default="X")
 opts=parser.parse_args()
 
 sampleDatasets_pf_cpf_sv = ["db","pf","cpf","sv"]
@@ -43,6 +44,6 @@ if True:
         os.mkdir(evalDir)
 
     df = evaluate(testd, inputTrainDataCollection, evalModel, evalDir, storeInputs=opts.storeInputs)
-    make_plots(evalDir, savedir=opts.p)
+    make_plots(evalDir, savedir=opts.p, taggerName=opts.taggerName)
 
 

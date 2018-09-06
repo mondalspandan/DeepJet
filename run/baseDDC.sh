@@ -18,13 +18,13 @@ mkdir $INDIR
 cd ~/data/Mauro/DeepJet
 source gpu_env.sh
 cd Train
-convertFromRoot.py -i ../list_80x_train.txt -o $INDIR/dctrain -c TrainData_deepDoubleC_lowest
+convertFromRoot.py -i ../list_80x_train.txt -o $INDIR/dctrain -c TrainData_DeepDoubleC_reference
 python Train.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training --batch 4096 --epochs 100 --resume
 cp -r $INDIR/training $INDIR/training_nodec
 python Train.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training --batch 4096 --epochs 20 --resume --decor
 
 convertFromRoot.py -i ../list_80x_test.txt -o $INDIR/dctest --testdatafor $INDIR/training/trainsamples.dc
-python BEval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training_nodec -o $INDIR/res
-python BEval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/res_dec
+python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training_nodec -o $INDIR/res
+python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/res_dec
 
 
