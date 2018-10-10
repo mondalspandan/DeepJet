@@ -45,7 +45,7 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
 
     return evalModel
 
-def evaluate(testd, trainData, model, outputDir):
+def evaluate(testd, trainData, model, outputDir, storeInputs=False):
     	NENT = 1  # Can skip some events
     	filelist=[]
         i=0
@@ -61,24 +61,24 @@ def evaluate(testd, trainData, model, outputDir):
             predict_test_i = model.predict(features_val)
             labels_val_i = h5File['y0'][()][::NENT,:]
             spectators_val_i = h5File['z0'][()][::NENT,0,:]
-            raw_features_val_i = h5File['z1'][()][::NENT,0,:]
+            if storeInputs: raw_features_val_i = h5File['z1'][()][::NENT,0,:]
             if i==0:
                 predict_test = predict_test_i
                 labels_val = labels_val_i
                 spectators_val = spectators_val_i
-                raw_features_val = raw_features_val_i                                                    
+                if storeInputs: raw_features_val = raw_features_val_i                                                    
             else:
                 predict_test = np.concatenate((predict_test,predict_test_i))
                 labels_val = np.concatenate((labels_val, labels_val_i))
                 spectators_val = np.concatenate((spectators_val, spectators_val_i))
-                raw_features_val = np.concatenate((raw_features_val, raw_features_val_i))
+                if storeInputs: raw_features_val = np.concatenate((raw_features_val, raw_features_val_i))
             i+=1
 
         # Value
 	#labels_val=testd.getAllLabels()[0][::NENT,:]
         #features_val=testd.getAllFeatures()[0][::NENT,0,:]
         #spectators_val = testd.getAllSpectators()[0][::NENT,0,:]
-        #raw_features_val = testd.getAllSpectators()[-1][::NENT,0,:]
+        #if storeInputs: raw_features_val = testd.getAllSpectators()[-1][::NENT,0,:]
         
 	# Labels
 	print testd.dataclass.branches
@@ -94,15 +94,16 @@ def evaluate(testd, trainData, model, outputDir):
 	print "Coulmns", spectator_names                   
         df = pd.DataFrame(spectators_val, columns = spectator_names)
 
-	for i, tname in enumerate(feature_names):
-		df[tname] = raw_features_val[:,i]
+	if storeInputs: 
+		for i, tname in enumerate(feature_names):
+			df[tname] = raw_features_val[:,i]
 
 	# Add predictions
 	print truthnames
 	print predict_test.shape
 	for i, tname in enumerate(truthnames):
 		df['truth'+tname] = labels_val[:,i]
-		print "Mean 0th label predict predict of ", tname, np.mean(predict_test[:,0]), ", Stats:", np.sum(labels_val[:,i]), "/", len(labels_val[:,i])
+		#print "Mean 0th label predict predict of ", tname, np.mean(predict_test[:,0]), ", Stats:", np.sum(labels_val[:,i]), "/", len(labels_val[:,i])
 		df['predict'+tname] = predict_test[:,i]
 
 	print "Testing prediction:"
