@@ -32,7 +32,7 @@ class TrainData_DeepDoubleX(TrainData):
 	self.weight=True
 	self.remove=False
 	self.removeUnderOverflow = True	
-
+	
         #this is only needed because the truth definitions are different from deepFlavour
         self.allbranchestoberead=[]
         self.registerBranches(self.undefTruth)
@@ -311,17 +311,8 @@ class TrainData_DeepDoubleX_db_pf_cpf_sv(TrainData_DeepDoubleX):
                           'sv_costhetasvpv'
                          ],
                          5)
-
-        #branches that are used directly in the following function 'readFromRootFile'
-        #this is a technical trick to speed up the conversion
-        #self.registerBranches(['Cpfcan_erel','Cpfcan_eta','Cpfcan_phi',
-        #                       'Npfcan_erel','Npfcan_eta','Npfcan_phi',
-        #                       'nCpfcand','nNpfcand',
-        #                       'jet_eta','jet_phi'])
-        self.registerBranches(['sample_isQCD','fj_isH','fj_isQCD'])
-        
-        
-    #this function describes how the branches are converted
+    
+	#this function describes how the branches are converted
     def readFromRootFile(self,filename,TupleMeanStd, weighter):
         
         #the first part is standard, no changes needed
@@ -334,23 +325,11 @@ class TrainData_DeepDoubleX_db_pf_cpf_sv(TrainData_DeepDoubleX):
         tree = rfile.Get("deepntuplizer/tree")
         self.nsamples=tree.GetEntries()
         
-        #the definition of what to do with the branches
-        
-        # those are the global branches (jet pt etc)
-        # they should be just glued to each other in one vector
-        # and zero padded (and mean subtracted and normalised)
-        #x_global = MeanNormZeroPad(filename,TupleMeanStd,
-        #                           [self.branches[0]],
-        #                           [self.branchcutoffs[0]],self.nsamples)
-        
-        # the second part (the pf candidates) should be treated particle wise
-        # an array with (njets, nparticles, nproperties) is created
-    
         x_glb  = ZeroPadParticles(filename,TupleMeanStd,
                                           self.branches[0],
                                           self.branchcutoffs[0],self.nsamples)
 
-        x_db  = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_db  = ZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
 
@@ -358,15 +337,15 @@ class TrainData_DeepDoubleX_db_pf_cpf_sv(TrainData_DeepDoubleX):
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
 
-        #x_pf  = MeanNormZeroPadParticles(filename,TupleMeanStd,
-        #                                 self.branches[2],
-        #                                 self.branchcutoffs[2],self.nsamples)
-        
-        x_cpf = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_pf  = ZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[2],
                                          self.branchcutoffs[2],self.nsamples)
         
-        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_cpf = ZeroPadParticles(filename,TupleMeanStd,
+                                         self.branches[2],
+                                         self.branchcutoffs[2],self.nsamples)
+        
+        x_sv = ZeroPadParticles(filename,TupleMeanStd,
                                         self.branches[3],
                                         self.branchcutoffs[3],self.nsamples)
        
@@ -392,16 +371,6 @@ class TrainData_DeepDoubleX_db_pf_cpf_sv(TrainData_DeepDoubleX):
         alltruth=self.reduceTruth(Tuple)
 	undef=numpy.sum(alltruth,axis=1)
             
-        #if self.weight or self.remove:
-	#    print('Training samples, remove undefined')
-	#    weights=weights[undef > 0]
-        #    x_glb=x_glb[undef > 0]
-	#    x_db=x_db[undef > 0]
-	#    x_db_raw=x_db_raw[undef > 0]
-	#    x_sv=x_sv[undef > 0]
-	#    x_cpf=x_cpf[undef > 0]
-	#    alltruth=alltruth[undef > 0]
-
 	if self.remove:
 	    print('Removing to match weighting')
             notremoves=notremoves[undef > 0]
@@ -522,7 +491,6 @@ class TrainData_DeepDoubleX_db_cpf_sv_reduced(TrainData_DeepDoubleX):
         #                       'Npfcan_erel','Npfcan_eta','Npfcan_phi',
         #                       'nCpfcand','nNpfcand',
         #                       'jet_eta','jet_phi'])
-        #self.registerBranches(['sample_isQCD','fj_isH','fj_isQCD'])
         
         
     #this function describes how the branches are converted
@@ -543,17 +511,20 @@ class TrainData_DeepDoubleX_db_cpf_sv_reduced(TrainData_DeepDoubleX):
         # those are the global branches (jet pt etc)
         # they should be just glued to each other in one vector
         # and zero padded (and mean subtracted and normalised)
-        #x_global = MeanNormZeroPad(filename,TupleMeanStd,
+        # x_global = MeanNormZeroPad(filename,TupleMeanStd,
         #                           [self.branches[0]],
         #                           [self.branchcutoffs[0]],self.nsamples)
         # the second part (the pf candidates) should be treated particle wise
         # an array with (njets, nparticles, nproperties) is created
+	#
+	# MeanNormZeroPad[Particles] does preprocessing, ZeroPad[Particles] does not and we normalzie it with batch_norm layer
+	# MeanNorm* does not work when putting the model into cmssw
     
         x_glb  = ZeroPadParticles(filename,TupleMeanStd,
                                           self.branches[0],
                                           self.branchcutoffs[0],self.nsamples)
 
-        x_db  = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_db  = ZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
        
@@ -561,11 +532,11 @@ class TrainData_DeepDoubleX_db_cpf_sv_reduced(TrainData_DeepDoubleX):
                                          self.branches[1],
                                          self.branchcutoffs[1],self.nsamples)
  
-        x_cpf = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_cpf = ZeroPadParticles(filename,TupleMeanStd,
                                          self.branches[2],
                                          self.branchcutoffs[2],self.nsamples)
         
-        x_sv = MeanNormZeroPadParticles(filename,TupleMeanStd,
+        x_sv = ZeroPadParticles(filename,TupleMeanStd,
                                         self.branches[3],
                                         self.branchcutoffs[3],self.nsamples)
         
