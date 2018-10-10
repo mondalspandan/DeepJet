@@ -42,7 +42,7 @@ custom_objects_list.update(global_loss_list)
 custom_objects_list.update(global_layers_list)
 custom_objects_list.update(global_metrics_list)
 
-inputDataset = sampleDatasets_pf_cpf_sv
+inputDataset = sampleDatasets_cpf_sv
 
 if True:
     args = MyClass()
