@@ -29,7 +29,7 @@ sampleDatasets_cpf_sv = ["db","cpf","sv"]
 sampleDatasets_sv = ["db","sv"]
 
 #select model and eval functions
-from models.DeepJet_models_final import conv_model_final as trainingModel
+from models.convolutional import model_DeepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
 from eval_functions import loadModel
 
