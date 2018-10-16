@@ -1,5 +1,5 @@
-
-
+import os
+os.environ['DECORRELATE'] = "True"
 from DeepJetCore.training.training_base import training_base
 from Losses import loss_NLL, loss_meansquared, loss_kldiv, global_loss_list
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
@@ -16,7 +16,7 @@ train=training_base(testrun=True,renewtokens=False)
 trainedModel = '/data/shared/BumbleB/DDBfull100/training/KERAS_check_best_model.h5'
 
 if not train.modelSet():
-    from models import model_deepDoubleBReference as trainingModel
+    from models import model_deepDoubleXReference as trainingModel
 
     train.setModel(trainingModel, datasets=['db','pf','cpf'], removedVars=None)
     

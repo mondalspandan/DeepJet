@@ -3,21 +3,24 @@ from argparse import ArgumentParser
                                                                                                                                   
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
-parser.add_argument("--multi", action='store_true', default=False, help="Binary or categorical crossentropy")
-#parser.add_argument("-g", "--gpu", default=1, help="Run on gpu's (Need to be in deepjetLinux3_gpu env)", const=1)
+parser.add_argument("--decor", action='store_true', default=False, help="Use kl_div to decorrelate")
+parser.add_argument("-g", "--gpu", default=-1, help="Use 1 specific gpu (Need to be in deepjetLinux3_gpu env)", type=int)
+parser.add_argument("-m", "--multi-gpu", action='store_true', default=False, help="Use all visible gpus (Need to be in deepjetLinux3_gpu env)")
 parser.add_argument("-i", help="Training dataCollection.dc", default=None, metavar="FILE")
 parser.add_argument("-o",  help="Training output dir", default=None, metavar="PATH")
 parser.add_argument("--batch",  help="Batch size, default = 2000", default=2000, metavar="INT")
 parser.add_argument("--epochs",  help="Epochs, default = 50", default=50, metavar="INT")
 parser.add_argument("--resume", action='store_true', default=False, help="Continue previous")
 opts=parser.parse_args()
+if opts.decor:  os.environ['DECORRELATE'] = "True"
+else:  os.environ['DECORRELATE'] = "False"
 
 # Some used default settings
 class MyClass:
     """A simple example class"""
     def __init__(self):
-	self.gpu = ''
-	self.gpufraction = ''
+	self.gpu = -1
+	self.gpufraction = -1
 	self.modelMethod = ''
         self.inputDataCollection = ''
         self.outputDir = ''
@@ -27,40 +30,49 @@ sampleDatasets_cpf_sv = ["db","cpf","sv"]
 sampleDatasets_sv = ["db","sv"]
 
 #select model and eval functions
-from models.DeepJet_models_final import conv_model_final as trainingModel
+from models.convolutional import model_deepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
-from eval_functions import loadModel
 
-inputDataset = sampleDatasets_pf_cpf_sv
+from Losses import loss_NLL, loss_meansquared, loss_kldiv, global_loss_list
+from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
+from Layers import global_layers_list
+from Metrics import global_metrics_list
+custom_objects_list = {}
+custom_objects_list.update(global_loss_list)
+custom_objects_list.update(global_layers_list)
+custom_objects_list.update(global_metrics_list)
+
+inputDataset = sampleDatasets_cpf_sv
 
 if True:
     args = MyClass()
     args.inputDataCollection = opts.i
     args.outputDir = opts.o
-    
-    multi_gpu = len([x for x in os.popen("nvidia-smi -L").read().split("\n") if "GPU" in x])
-    print "nGPU:", multi_gpu
+    multi_gpu = 1
+    if opts.multi_gpu:
+        # use all visible GPUs
+        multi_gpu = len([x for x in os.popen("nvidia-smi -L").read().split("\n") if "GPU" in x])
+        args.gpu = ','.join([str(i) for i in range(multi_gpu)])
+        print(args.gpu)
 	
 
-    train=training_base(splittrainandtest=0.9,testrun=False, resumeSilently=opts.resume, parser=args)
-    #train=training_base(splittrainandtest=0.9,testrun=False, args=args)
+    train=training_base(splittrainandtest=0.9,testrun=False, resumeSilently=opts.resume, renewtokens=False, parser=args)
     if not train.modelSet():
         train.setModel(trainingModel, 
-			#num_classes=5, #num_regclasses=5,
 			datasets=inputDataset, 
 			multi_gpu=multi_gpu
 			)
-    	if opts.multi: 
-		loss = 'categorical_crossentropy'
-		accuracy = 'categorical_accuracy'
+    	if opts.decor: 
+		loss = loss_kldiv 
 	else: 
 		loss = 'binary_crossentropy'
-		accuracy = 'binary_accuracy'
 
         train.compileModel(learningrate=0.001,
                         	loss=[loss],
-	                        metrics=['accuracy','binary_accuracy','MSE','MSLE'],
+	                        metrics=['accuracy'],
 				loss_weights=[1.])
+	
+	#if opts.decor: train.loadWeights(opts.o+"/KERAS_check_best_model.h5")
 
     model, history = train.trainModel(nepochs=int(opts.epochs),
 						batchsize=int(opts.batch),
