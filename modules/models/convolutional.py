@@ -439,9 +439,9 @@ def FC(data, num_hidden, act='relu', p=None, name='', trainable=True):
         dropout = Dropout(rate=p, name='%s_dropout' % name)(fc)
         return dropout
 
-def model_DeepDoubleXReference(inputs, num_classes, num_regclasses, datasets = ['db','cpf','SV'], removedVars = None, multi_gpu=1,  **kwargs):
+def model_deepDoubleXReference(inputs, num_classes, num_regclasses, datasets = ['db','cpf','sv'], removedVars = None, multi_gpu=1,  **kwargs):
     """
-    reference 1x1 convolutional model for 'DeepDoubleX'
+    reference 1x1 convolutional model for 'deepDoubleX'
     with recurrent layers and batch normalisation
     """
     kernel_initializer = 'he_normal'
@@ -475,6 +475,9 @@ def model_DeepDoubleXReference(inputs, num_classes, num_regclasses, datasets = [
     output = Dense(num_classes, activation='softmax', name='ID_pred', kernel_initializer=kernel_initializer_fc)(fc)
                             
     model = Model(inputs=inputs, outputs=[output])
+    if multi_gpu > 1:
+        from multi_gpu_model import multi_gpu_model
+        model = multi_gpu_model(model, gpus=multi_gpu)
 
     return model
 
