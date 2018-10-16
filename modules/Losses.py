@@ -22,28 +22,108 @@ def loss_kldiv(y_in,x):
     """
     h = y_in[:,0:NBINS]
     y = y_in[:,NBINS:NBINS+2]
-    h_all = K.dot(K.transpose(h), y)
-    h_all_q = h_all[:,0]
-    h_all_h = h_all[:,1]
-    h_all_q = h_all_q / K.sum(h_all_q,axis=0)
-    h_all_h = h_all_h / K.sum(h_all_h,axis=0)
-    h_btag_anti_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))
-    h_btag_anti_h = K.dot(K.transpose(h), K.dot(tf.diag(y[:,1]),x))
-    h_btag_q = h_btag_anti_q[:,1]
+    
+    # build the total mass histogram for q and b classes (not used)
+    #h_all = K.dot(K.transpose(h), y)
+    #h_all_q = h_all[:,0]
+    #h_all_b = h_all[:,1]
+    #h_all_q = h_all_q / K.sum(h_all_q,axis=0)
+    #h_all_b = h_all_b / K.sum(h_all_b,axis=0)
+    
+    # build mass histogram for true q events weighted by q, b prob
+    h_alltag_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))
+    # build mass histogram for true b events weighted by q, b prob
+    h_alltag_b = K.dot(K.transpose(h), K.dot(tf.diag(y[:,1]),x))
+    
+    # select mass histogram for true q events weighted by q prob; normalize
+    h_qtag_q = h_alltag_q[:,0]
+    h_qtag_q = h_qtag_q / K.sum(h_qtag_q,axis=0)
+    # select mass histogram for true q events weighted by b prob; normalize
+    h_btag_q = h_alltag_q[:,1]
     h_btag_q = h_btag_q / K.sum(h_btag_q,axis=0)
-    h_anti_q = h_btag_anti_q[:,0]
-    h_anti_q = h_anti_q / K.sum(h_anti_q,axis=0)
-    h_btag_h = h_btag_anti_h[:,1]
-    h_btag_h = h_btag_h / K.sum(h_btag_h,axis=0)
-    h_anti_h = h_btag_anti_q[:,0]
-    h_anti_h = h_anti_h / K.sum(h_anti_h,axis=0)
+    # select mass histogram for true b events weighted by q prob; normalize        
+    h_qtag_b = h_alltag_b[:,0]
+    h_qtag_b = h_qtag_b / K.sum(h_qtag_b,axis=0)
+    # select mass histogram for true b events weighted by b prob; normalize        
+    h_btag_b = h_alltag_b[:,1]
+    h_btag_b = h_btag_b / K.sum(h_btag_b,axis=0)
 
+    # compute KL divergence between true q events weighted by b vs q prob (symmetrize?)
+    # compute KL divergence between true b events weighted by b vs q prob (symmetrize?)
     return categorical_crossentropy(y, x) + \
-        LAMBDA*kullback_leibler_divergence(h_btag_q, h_anti_q) + \
-        LAMBDA*kullback_leibler_divergence(h_btag_h, h_anti_h)         
+        LAMBDA*kullback_leibler_divergence(h_btag_q, h_qtag_q) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_b, h_qtag_b)         
 
 #please always register the loss function here                                                                                              
 global_loss_list['loss_kldiv']=loss_kldiv
+
+def loss_kldiv_3class(y_in,x):
+    """
+    mass sculpting penlaty term usking kullback_leibler_divergence
+    y_in: truth [h, y]
+    x: predicted NN output for y
+    h: the truth mass histogram vector "one-hot encoded" (length NBINS=40)
+    y: the truth categorical labels  "one-hot encoded" (length NClasses=3)
+    """
+    h = y_in[:,0:NBINS]
+    y = y_in[:,NBINS:NBINS+3]
+    
+    # build the total mass histogram for q, b, and c classes (not used)
+    #h_all = K.dot(K.transpose(h), y)
+    #h_all_q = h_all[:,0]
+    #h_all_b = h_all[:,1]
+    #h_all_c = h_all[:,2]
+    #h_all_q = h_all_q / K.sum(h_all_q,axis=0)
+    #h_all_b = h_all_b / K.sum(h_all_b,axis=0)
+    #h_all_c = h_all_c / K.sum(h_all_c,axis=0)
+    
+    # build mass histogram for true q events weighted by q, b, c prob
+    h_alltag_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))
+    # build mass histogram for true b events weighted by q, b, c prob
+    h_alltag_b = K.dot(K.transpose(h), K.dot(tf.diag(y[:,1]),x))
+    # build mass histogram for true c events weighted by q, b, c prob
+    h_alltag_c = K.dot(K.transpose(h), K.dot(tf.diag(y[:,2]),x))
+
+    # select mass histogram for true q events weighted by q prob; normalize
+    h_qtag_q = h_alltag_q[:,0]
+    h_qtag_q = h_qtag_q / K.sum(h_qtag_q,axis=0)
+    # select mass histogram for true q events weighted by b prob; normalize
+    h_btag_q = h_alltag_q[:,1]
+    h_btag_q = h_btag_q / K.sum(h_btag_q,axis=0)
+    # select mass histogram for true q events weighted by c prob; normalize
+    h_ctag_q = h_alltag_q[:,2]
+    h_ctag_q = h_ctag_q / K.sum(h_ctag_q,axis=0)
+    # select mass histogram for true b events weighted by q prob; normalize
+    h_qtag_b = h_alltag_b[:,0]
+    h_qtag_b = h_qtag_b / K.sum(h_qtag_b,axis=0)
+    # select mass histogram for true b events weighted by b prob; normalize
+    h_btag_b = h_alltag_b[:,1]
+    h_btag_b = h_btag_b / K.sum(h_btag_b,axis=0)
+    # select mass histogram for true b events weighted by c prob; normalize
+    h_ctag_b = h_alltag_b[:,2]
+    h_ctag_b = h_ctag_b / K.sum(h_ctag_b,axis=0)
+    # select mass histogram for true c events weighted by q prob; normalize
+    h_qtag_c = h_alltag_c[:,0]
+    h_qtag_c = h_qtag_c / K.sum(h_qtag_c,axis=0)
+    # select mass histogram for true c events weighted by b prob; normalize
+    h_btag_c = h_alltag_c[:,1]
+    h_btag_c = h_btag_c / K.sum(h_cbag_c,axis=0)
+    # select mass histogram for true c events weighted by c prob; normalize
+    h_ctag_c = h_alltag_c[:,2]
+    h_ctag_c = h_ctag_c / K.sum(h_ctag_c,axis=0)
+    
+    # compute KL divergence between true q events weighted by b vs q prob (symmetrize?)
+    # compute KL divergence between true b events weighted by b vs q prob (symmetrize?)
+    # compute KL divergence between true q events weighted by c vs q prob (symmetrize?)
+    # compute KL divergence between true c events weighted by c vs q prob (symmetrize?)
+    return categorical_crossentropy(y, x) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_q, h_qtag_q) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_b, h_qtag_b) + \
+        LAMBDA*kullback_leibler_divergence(h_ctag_q, h_qtag_q) + \
+        LAMBDA*kullback_leibler_divergence(h_ctag_c, h_qtag_c)
+
+#please always register the loss function here                                                                                              
+global_loss_list['loss_kldiv_3class']=loss_kldiv_3class
 
 def weighted_loss(loss_function, clipmin = 0., clipmax = None):
     """
