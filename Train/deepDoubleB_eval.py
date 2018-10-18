@@ -10,10 +10,10 @@ parser.add_argument("-d",  help="Training output dir", default=None, metavar="PA
 parser.add_argument("-o",  help="Eval output dir", default=None, metavar="PATH")
 opts=parser.parse_args()
 
-sampleDatasets_cpf_sv = ["db","cpf","SV"]
+sampleDatasets_cpf_sv = ["db","cpf","sv"]
 
 #select model and eval functions
-from models import model_deepDoubleBReference as trainingModel
+from models import model_deepDoubleXReference as trainingModel
 from DeepJetCore.training.training_base import training_base
 from eval_funcs import loadModel, makePlots, _byteify, makeLossPlot, makeComparisonPlots
 #from eval_functions import loadModel, evaluate
