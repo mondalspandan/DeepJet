@@ -19,10 +19,8 @@ else:  os.environ['DECORRELATE'] = "False"
 class MyClass:
     """A simple example class"""
     def __init__(self):
-	self.gpu = ''
-	#self.gpu = -1
-	self.gpufraction = ''
-	#self.gpufraction = -1
+	self.gpu = -1
+	self.gpufraction = -1
 	self.modelMethod = ''
         self.inputDataCollection = ''
         self.outputDir = ''
