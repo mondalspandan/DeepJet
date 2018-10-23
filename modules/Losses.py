@@ -1,7 +1,7 @@
 from keras import backend as K
 from tensorflow import where, greater, abs, zeros_like, exp
 import tensorflow as tf
-from keras.losses import kullback_leibler_divergence, categorical_crossentropy
+from keras.losses import kullback_leibler_divergence, categorical_crossentropy, binary_crossentropy
 
 global_loss_list={}
 
@@ -10,7 +10,7 @@ global_loss_list={}
 NBINS=40 # number of bins for loss function
 MMAX = 200. # max value
 MMIN = 40. # min value
-LAMBDA = 0.1 # lambda for penalty
+LAMBDA = 10 # lambda for penalty
 
 def loss_kldiv(y_in,x):
     """
@@ -35,15 +35,26 @@ def loss_kldiv(y_in,x):
     h_anti_q = h_anti_q / K.sum(h_anti_q,axis=0)
     h_btag_h = h_btag_anti_h[:,1]
     h_btag_h = h_btag_h / K.sum(h_btag_h,axis=0)
-    h_anti_h = h_btag_anti_q[:,0]
+    h_anti_h = h_btag_anti_h[:,0]
     h_anti_h = h_anti_h / K.sum(h_anti_h,axis=0)
 
-    return categorical_crossentropy(y, x) + \
+    return binary_crossentropy(y, x) + \
         LAMBDA*kullback_leibler_divergence(h_btag_q, h_anti_q) + \
         LAMBDA*kullback_leibler_divergence(h_btag_h, h_anti_h)         
 
 #please always register the loss function here                                                                                              
 global_loss_list['loss_kldiv']=loss_kldiv
+
+def custom_crossentropy(y_in,x):
+    """
+    Modified loss to enable tracking mass sculpting during regular training
+    """
+    h = y_in[:,0:NBINS]
+    y = y_in[:,NBINS:NBINS+2]
+    return binary_crossentropy(y, x) 
+
+global_loss_list['custom_crossentropy']=custom_crossentropy
+
 
 def weighted_loss(loss_function, clipmin = 0., clipmax = None):
     """

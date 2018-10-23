@@ -17,7 +17,7 @@ export DEEPJET=`pwd`
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/software/TensorFlow/lib64/
 
 # for RWTH cluster 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/software/TensorFlow/lib64/
-module load cuda/90
-module load cudnn/7.0.5
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/software/TensorFlow/lib64/
+#module load cuda/90
+#module load cudnn/7.0.5
 
