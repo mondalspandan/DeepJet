@@ -9,7 +9,7 @@ from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 train=training_base(testrun=True,renewtokens=False)
 
 if not train.modelSet():
-    from models import model_DeepDoubleXReference as trainingModel
+    from models import model_deepDoubleXReference as trainingModel
 
     train.setModel(trainingModel, datasets=['db','cpf','sv'], removedVars=None)
     

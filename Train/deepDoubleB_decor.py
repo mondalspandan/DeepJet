@@ -18,6 +18,7 @@ trainedModel = '/data/shared/BumbleB/DDBfull100/training/KERAS_check_best_model.
 if not train.modelSet():
     from models import model_DeepDoubleXReference as trainingModel
 
+
     train.setModel(trainingModel, datasets=['db','pf','cpf'], removedVars=None)
     
     train.compileModel(learningrate=0.001,

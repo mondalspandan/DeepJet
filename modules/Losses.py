@@ -50,6 +50,7 @@ def loss_kldiv(y_in,x):
 #please always register the loss function here                                                                                              
 global_loss_list['loss_kldiv']=loss_kldiv
 
+
 def custom_crossentropy(y_in,x):
     """
     Modified loss to enable tracking mass sculpting during regular training

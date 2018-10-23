@@ -440,8 +440,9 @@ def FC(data, num_hidden, act='relu', p=None, name='', trainable=True):
         return dropout
 
 def model_DeepDoubleXReference(inputs, num_classes, num_regclasses, datasets = ['db','cpf','sv'], removedVars = None, multi_gpu=1,  **kwargs):
+
     """
-    reference 1x1 convolutional model for 'DeepDoubleX'
+    reference 1x1 convolutional model for 'deepDoubleX'
     with recurrent layers and batch normalisation
     """
     kernel_initializer = 'he_normal'

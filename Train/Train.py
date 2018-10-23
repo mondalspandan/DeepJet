@@ -28,7 +28,7 @@ class MyClass:
 sampleDatasets_cpf_sv = ["db","cpf","sv"]
 
 #select model and eval functions
-from models.convolutional import model_DeepDoubleXReference  as trainingModel
+from models.convolutional import model_deepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
 
 from Losses import loss_NLL, loss_meansquared, loss_kldiv, global_loss_list, custom_crossentropy
@@ -46,21 +46,21 @@ if True:  # Should probably fix
     args = MyClass()
     args.inputDataCollection = opts.i
     args.outputDir = opts.o
-    
+
     multi_gpu = 1
     if opts.multi_gpu:
         # use all visible GPUs
         multi_gpu = len([x for x in os.popen("nvidia-smi -L").read().split("\n") if "GPU" in x])
         args.gpu = ','.join([str(i) for i in range(multi_gpu)])
         print(args.gpu)
-    
+
     # Separate losses and metrics for training and decorrelatin
     if opts.decor: 
-	loss = loss_kldiv 
-	metrics=[acc_kldiv, mass_kldiv_q, mass_kldiv_h]
+        loss = loss_kldiv 
+        metrics=[acc_kldiv, mass_kldiv_q, mass_kldiv_h]
     else: 
-	loss = 'categorical_crossentropy'
-	metrics=['accuracy']
+        loss = 'categorical_crossentropy'
+        metrics=['accuracy']
 
     # Set up training
     train=training_base(splittrainandtest=0.9,testrun=False, useweights=True, resumeSilently=opts.resume, renewtokens=False, parser=args)
