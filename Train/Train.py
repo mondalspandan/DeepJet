@@ -4,7 +4,8 @@ from argparse import ArgumentParser
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
 parser.add_argument("--decor", action='store_true', default=False, help="Use kl_div to decorrelate")
-#parser.add_argument("-g", "--gpu", default=1, help="Run on gpu's (Need to be in deepjetLinux3_gpu env)", const=1)
+parser.add_argument("-g", "--gpu", default=-1, help="Use 1 specific gpu (Need to be in deepjetLinux3_gpu env)", type=int)
+parser.add_argument("-m", "--multi-gpu", action='store_true', default=False, help="Use all visible gpus (Need to be in deepjetLinux3_gpu env)")
 parser.add_argument("-i", help="Training dataCollection.dc", default=None, metavar="FILE")
 parser.add_argument("-o",  help="Training output dir", default=None, metavar="PATH")
 parser.add_argument("--batch",  help="Batch size, default = 2000", default=2000, metavar="INT")
@@ -19,7 +20,9 @@ class MyClass:
     """A simple example class"""
     def __init__(self):
 	self.gpu = ''
+	#self.gpu = -1
 	self.gpufraction = ''
+	#self.gpufraction = -1
 	self.modelMethod = ''
         self.inputDataCollection = ''
         self.outputDir = ''
@@ -29,12 +32,11 @@ sampleDatasets_cpf_sv = ["db","cpf","sv"]
 #select model and eval functions
 from models.convolutional import model_DeepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
-from eval_functions import loadModel
 
 from Losses import loss_NLL, loss_meansquared, loss_kldiv, global_loss_list, custom_crossentropy
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 from Layers import global_layers_list
-from Metrics import global_metrics_list, acc_kldiv, mass_kldiv_q, mass_kldiv_h, mass_kldiv_q2
+from Metrics import global_metrics_list, acc_kldiv, mass_kldiv_q, mass_kldiv_h
 custom_objects_list = {}
 custom_objects_list.update(global_loss_list)
 custom_objects_list.update(global_layers_list)
@@ -47,19 +49,23 @@ if True:  # Should probably fix
     args.inputDataCollection = opts.i
     args.outputDir = opts.o
     
-    multi_gpu = len([x for x in os.popen("nvidia-smi -L").read().split("\n") if "GPU" in x])
-    print "nGPU:", multi_gpu
-
+    multi_gpu = 1
+    if opts.multi_gpu:
+        # use all visible GPUs
+        multi_gpu = len([x for x in os.popen("nvidia-smi -L").read().split("\n") if "GPU" in x])
+        args.gpu = ','.join([str(i) for i in range(multi_gpu)])
+        print(args.gpu)
+    
     # Separate losses and metrics for training and decorrelatin
     if opts.decor: 
 	loss = loss_kldiv 
 	metrics=[acc_kldiv, mass_kldiv_q, mass_kldiv_h]
     else: 
-	loss = 'binary_crossentropy'
+	loss = 'categorical_crossentropy'
 	metrics=['accuracy']
 
     # Set up training
-    train=training_base(splittrainandtest=0.9,testrun=False, useweights=True, resumeSilently=opts.resume, parser=args)
+    train=training_base(splittrainandtest=0.9,testrun=False, useweights=True, resumeSilently=opts.resume, renewtokens=False, parser=args)
     if not opts.decor and not train.modelSet():
         train.setModel(trainingModel, 
 			datasets=inputDataset, 

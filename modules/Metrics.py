@@ -1,7 +1,7 @@
 from keras import backend as K
 #from tensorflow import where, greater, abs, zeros_like, exp
 import tensorflow as tf
-from keras.metrics import binary_accuracy
+from keras.metrics import categorical_accuracy
 from keras.losses import kullback_leibler_divergence
 
 global_metrics_list = {}
@@ -15,7 +15,7 @@ def acc_kldiv(y_in,x):
     h = y_in[:,0:NBINS]
     y = y_in[:,NBINS:NBINS+2]
 
-    return binary_accuracy(y, x)
+    return categorical_accuracy(y, x)
 
 def mass_kldiv_q(y_in,x):
     """

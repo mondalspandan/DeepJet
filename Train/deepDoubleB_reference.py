@@ -1,16 +1,17 @@
-
-
+import os
+os.environ['DECORRELATE'] = "False"
 from DeepJetCore.training.training_base import training_base
 from Losses import loss_NLL, loss_meansquared   
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 
 #also does all the parsing
+
 train=training_base(testrun=True,renewtokens=False)
 
 if not train.modelSet():
     from models import model_DeepDoubleXReference as trainingModel
 
-    train.setModel(trainingModel, datasets=['db','cpf','SV'], removedVars=None)
+    train.setModel(trainingModel, datasets=['db','cpf','sv'], removedVars=None)
     
     train.compileModel(learningrate=0.001,
                        loss=['categorical_crossentropy'],
