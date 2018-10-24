@@ -766,6 +766,13 @@ class TrainData_DeepDoubleC_reference(TrainData_DeepDoubleC_db_cpf_sv_reduced):
 	self.remove=False
 	self.referenceclass='lowest'
 
+class TrainData_DeepDoubleX_3lab(TrainData_DeepDoubleX_db_cpf_sv_reduced_3lab):
+    def __init__(self):
+        TrainData_DeepDoubleX_db_cpf_sv_reduced_3lab.__init__(self)
+        self.weight=True
+        self.remove=False
+        self.referenceclass='lowest'
+
 class TrainData_DeepDoubleCvB_reference(TrainData_DeepDoubleCvB_db_cpf_sv_reduced):
     def __init__(self):
         TrainData_DeepDoubleCvB_db_cpf_sv_reduced.__init__(self)
