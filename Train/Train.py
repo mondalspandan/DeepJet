@@ -29,7 +29,7 @@ class MyClass:
 sampleDatasets_cpf_sv = ["db","cpf","sv"]
 
 #select model and eval functions
-from models.convolutional import model_deepDoubleXReference  as trainingModel
+from models.convolutional import model_DeepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
 
 from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy
@@ -101,6 +101,8 @@ if True:  # Should probably fix
 
         train.keras_model=fixLayersContaining(train.keras_model, 'input_batchnorm')
 	
+    if opts.decor:
+        train.loadModel(opts.o+"/KERAS_check_best_model.h5")
 
     # Need to recompile after fixing batchnorm weights or loading model and changing loss to decorrelate
     train.compileModel(learningrate=0.001,
