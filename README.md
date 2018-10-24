@@ -60,7 +60,7 @@ Example use:
 ```
 mkdir run
 INDIR=run # Make a variable for a parent directory
-convertFromRoot.py -i train_list.txt -o $INDIR/dctrain -c TrainData_deepDoubleC_db_cpf_sv_reduced
+convertFromRoot.py -i train_list.txt -o $INDIR/dctrain -c TrainData_DeepDoubleC_db_cpf_sv_reduced
 ```
 Training
 ====

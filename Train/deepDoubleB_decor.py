@@ -16,7 +16,8 @@ train=training_base(testrun=True,renewtokens=False)
 trainedModel = '/data/shared/BumbleB/DDBfull100/training/KERAS_check_best_model.h5'
 
 if not train.modelSet():
-    from models import model_deepDoubleXReference as trainingModel
+    from models import model_DeepDoubleXReference as trainingModel
+
 
     train.setModel(trainingModel, datasets=['db','pf','cpf'], removedVars=None)
     

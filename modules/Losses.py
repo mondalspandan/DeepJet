@@ -1,7 +1,7 @@
 from keras import backend as K
 from tensorflow import where, greater, abs, zeros_like, exp
 import tensorflow as tf
-from keras.losses import kullback_leibler_divergence, categorical_crossentropy
+from keras.losses import kullback_leibler_divergence, categorical_crossentropy, binary_crossentropy
 
 global_loss_list={}
 
@@ -10,7 +10,7 @@ global_loss_list={}
 NBINS=40 # number of bins for loss function
 MMAX = 200. # max value
 MMIN = 40. # min value
-LAMBDA = 0.1 # lambda for penalty
+LAMBDA = 15 # lambda for penalty
 
 def loss_kldiv(y_in,x):
     """
@@ -22,13 +22,6 @@ def loss_kldiv(y_in,x):
     """
     h = y_in[:,0:NBINS]
     y = y_in[:,NBINS:NBINS+2]
-    
-    # build the total mass histogram for q and b classes (not used)
-    #h_all = K.dot(K.transpose(h), y)
-    #h_all_q = h_all[:,0]
-    #h_all_b = h_all[:,1]
-    #h_all_q = h_all_q / K.sum(h_all_q,axis=0)
-    #h_all_b = h_all_b / K.sum(h_all_b,axis=0)
     
     # build mass histogram for true q events weighted by q, b prob
     h_alltag_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))
@@ -57,6 +50,17 @@ def loss_kldiv(y_in,x):
 #please always register the loss function here                                                                                              
 global_loss_list['loss_kldiv']=loss_kldiv
 
+
+def custom_crossentropy(y_in,x):
+    """
+    Modified loss to enable tracking mass sculpting during regular training
+    """
+    h = y_in[:,0:NBINS]
+    y = y_in[:,NBINS:NBINS+2]
+    return categorical_crossentropy(y, x) 
+
+global_loss_list['custom_crossentropy']=custom_crossentropy
+
 def loss_kldiv_3class(y_in,x):
     """
     mass sculpting penlaty term usking kullback_leibler_divergence
@@ -67,15 +71,6 @@ def loss_kldiv_3class(y_in,x):
     """
     h = y_in[:,0:NBINS]
     y = y_in[:,NBINS:NBINS+3]
-    
-    # build the total mass histogram for q, b, and c classes (not used)
-    #h_all = K.dot(K.transpose(h), y)
-    #h_all_q = h_all[:,0]
-    #h_all_b = h_all[:,1]
-    #h_all_c = h_all[:,2]
-    #h_all_q = h_all_q / K.sum(h_all_q,axis=0)
-    #h_all_b = h_all_b / K.sum(h_all_b,axis=0)
-    #h_all_c = h_all_c / K.sum(h_all_c,axis=0)
     
     # build mass histogram for true q events weighted by q, b, c prob
     h_alltag_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))

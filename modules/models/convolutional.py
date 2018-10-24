@@ -439,7 +439,8 @@ def FC(data, num_hidden, act='relu', p=None, name='', trainable=True):
         dropout = Dropout(rate=p, name='%s_dropout' % name)(fc)
         return dropout
 
-def model_deepDoubleXReference(inputs, num_classes, num_regclasses, datasets = ['db','cpf','sv'], removedVars = None, multi_gpu=1,  **kwargs):
+def model_DeepDoubleXReference(inputs, num_classes, num_regclasses, datasets = ['db','cpf','sv'], removedVars = None, multi_gpu=1,  **kwargs):
+
     """
     reference 1x1 convolutional model for 'deepDoubleX'
     with recurrent layers and batch normalisation
@@ -481,9 +482,9 @@ def model_deepDoubleXReference(inputs, num_classes, num_regclasses, datasets = [
 
     return model
 
-def model_deepDoubleBLambda(inputs, num_classes, num_regclasses, datasets = ['db','pf','cpf','sv'], removedVars = None):
+def model_DeepDoubleBLambda(inputs, num_classes, num_regclasses, datasets = ['db','pf','cpf','sv'], removedVars = None):
     """
-    lambda 1x1 convolutional model for 'deepDoubleB'
+    lambda 1x1 convolutional model for 'DeepDoubleB'
     with recurrent layers and batch normalisation
     """
     kernel_initializer = 'he_normal'

@@ -768,7 +768,7 @@ class TrainData_DeepDoubleC_reference(TrainData_DeepDoubleC_db_cpf_sv_reduced):
 
 class TrainData_DeepDoubleCvB_reference(TrainData_DeepDoubleCvB_db_cpf_sv_reduced):
     def __init__(self):
-        TrainData_DeepDoubleC_db_cpf_sv_reduced.__init__(self)
+        TrainData_DeepDoubleCvB_db_cpf_sv_reduced.__init__(self)
 	self.weight=True
 	self.remove=False
         self.referenceclass='lowest'

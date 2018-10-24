@@ -157,7 +157,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
         fpr, tpr, threshold = roc_curve(truth, predict)
 
         cuts = {}
-        for wp in [0.01, 0.05, 0.1, 0.25]: # % mistag rate
+        for wp in [0.01, 0.05, 0.1, 0.25, 0.5, 1.0]: # % mistag rate
             idx, val = find_nearest(fpr, wp)
             cuts[str(wp)] = threshold[idx] # threshold for deep double-b corresponding to ~1% mistag rate
         
@@ -497,7 +497,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
             elif feature == "pt":
                 ax.set_xlabel(r'$\mathrm{p_T\ [GeV]}$', ha='right', x=1.0)
             elif feature in all_labels:
-                try: ax.set_xlabel(r'$\mathrm{}$'.format('{'+legend_labels[all_labels.index(feature)]+'}'), ha='right', x=1.0)
+                try: ax.set_xlabel(r'Dicriminator $\mathrm{}$'.format('{'+legend_labels[all_labels.index(feature)]+'}'), ha='right', x=1.0)
                 except: return
             else:
                 return
