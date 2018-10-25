@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
 parser.add_argument("--decor", action='store_true', default=False, help="Use kl_div to decorrelate")
+parser.add_argument("--classes", help="Number of classes, default 2", default=2, metavar="INT")
 parser.add_argument("-g", "--gpu", default=-1, help="Use 1 specific gpu (Need to be in deepjetLinux3_gpu env)", type=int)
 parser.add_argument("-m", "--multi-gpu", action='store_true', default=False, help="Use all visible gpus (Need to be in deepjetLinux3_gpu env)")
 parser.add_argument("-i", help="Training dataCollection.dc", default=None, metavar="FILE")
@@ -28,10 +29,10 @@ class MyClass:
 sampleDatasets_cpf_sv = ["db","cpf","sv"]
 
 #select model and eval functions
-from models.convolutional import model_deepDoubleXReference  as trainingModel
+from models.convolutional import model_DeepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
 
-from Losses import loss_NLL, loss_meansquared, loss_kldiv, global_loss_list, custom_crossentropy
+from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 from Layers import global_layers_list
 from Metrics import global_metrics_list, acc_kldiv, mass_kldiv_q, mass_kldiv_h
@@ -56,7 +57,15 @@ if True:  # Should probably fix
 
     # Separate losses and metrics for training and decorrelatin
     if opts.decor: 
-        loss = loss_kldiv 
+        nClasses=int(opts.classes)
+        if nClasses==2:
+                loss = loss_kldiv
+        elif nClasses==3:
+                loss = loss_kldiv_3class
+        else:
+                print "WARNING: Decorrelation with %d classes is not supported yet, using loss for 2 classes." %nClasses
+                loss = loss_kldiv
+        print "# of classes for decorrelation: %d" %nClasses 
         metrics=[acc_kldiv, mass_kldiv_q, mass_kldiv_h]
     else: 
         loss = 'categorical_crossentropy'
@@ -93,7 +102,7 @@ if True:  # Should probably fix
         train.keras_model=fixLayersContaining(train.keras_model, 'input_batchnorm')
 	
     if opts.decor:
-	train.loadModel(opts.o+"/KERAS_check_best_model.h5")
+        train.loadModel(opts.o+"/KERAS_check_best_model.h5")
 
     # Need to recompile after fixing batchnorm weights or loading model and changing loss to decorrelate
     train.compileModel(learningrate=0.001,

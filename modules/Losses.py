@@ -143,7 +143,7 @@ def loss_kldiv_3class(y_in,x):
     h_qtag_c = h_qtag_c / K.sum(h_qtag_c,axis=0)
     # select mass histogram for true c events weighted by b prob; normalize
     h_btag_c = h_alltag_c[:,1]
-    h_btag_c = h_btag_c / K.sum(h_cbag_c,axis=0)
+    h_btag_c = h_btag_c / K.sum(h_btag_c,axis=0)
     # select mass histogram for true c events weighted by c prob; normalize
     h_ctag_c = h_alltag_c[:,2]
     h_ctag_c = h_ctag_c / K.sum(h_ctag_c,axis=0)

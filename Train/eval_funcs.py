@@ -14,7 +14,7 @@ from keras.losses import kullback_leibler_divergence, categorical_crossentropy
 from keras.models import load_model, Model
 from argparse import ArgumentParser
 from keras import backend as K
-from Losses import loss_NLL, loss_meansquared, loss_kldiv, global_loss_list
+from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list
 from Layers import global_layers_list
 from Metrics import global_metrics_list
 custom_objects_list = {}

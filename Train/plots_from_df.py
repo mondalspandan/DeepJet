@@ -84,6 +84,11 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
             truth, predict, db =  roc_input(frame, signal=sig, include = sig+bkg, norm=norm)
             fpr, tpr, threshold = roc_curve(truth, predict)
             ax.plot(tpr, fpr, lw=2.5, label="DeepDouble{}, AUC = {:.1f}\%".format(name, auc(fpr,tpr)*100))
+
+            ROCtext=open(os.path.join(savedir, "ROCComparison_"+"+".join(sig)+"_vs_"+"+".join(bkg)+".txt"),'w')
+            for ind in range(len(tpr)):
+                            ROCtext.write(str(tpr[ind])+'\t'+str(fpr[ind])+'\n')
+            ROCtext.close()
             print "DeepDouble{}, AUC={}%".format(name, auc(fpr,tpr)*100), "Sig:", sig, "Bkg:", bkg
             
         ax.set_xlim(0,1)
