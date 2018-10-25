@@ -11,6 +11,7 @@ NBINS=40 # number of bins for loss function
 MMAX = 200. # max value
 MMIN = 40. # min value
 LAMBDA = 15 # lambda for penalty
+LAMBDA_ADV = 15 # lambda for adversary
 
 def loss_kldiv(y_in,x):
     """
@@ -60,6 +61,46 @@ def custom_crossentropy(y_in,x):
     return categorical_crossentropy(y, x) 
 
 global_loss_list['custom_crossentropy']=custom_crossentropy
+
+def loss_reg(y_in,x_in):
+    """
+    adversarial
+    y_in: truth [h, y]
+    x: predicted NN output for y
+    h: the truth mass histogram vector "one-hot encoded" (length NBINS=40)
+    y: the truth categorical labels  "one-hot encoded" (length NClasses=2)
+    """
+    h = y_in[:,0:NBINS]
+    y = y_in[:,NBINS:NBINS+2]
+    
+    hpred = x_in[:,0:NBINS]
+    ypred = x_in[:,NBINS:NBINS+2]
+    
+    return categorical_crossentropy(y, ypred) + LAMBDA_ADV*categorical_crossentropy(h, hpred)
+
+global_loss_list['loss_reg']=loss_reg
+
+def loss_disc(y_in,x_in):
+    """
+    Loss for only the discriminator part
+    """
+    y = y_in[:,NBINS:NBINS+2]
+    ypred = x_in[:,NBINS:NBINS+2]
+
+    return categorical_crossentropy(y, ypred)
+
+global_loss_list['loss_disc']=loss_disc
+
+def loss_adv(y_in,x_in):
+    """
+    Loss for only the adversary part
+    """
+    h = y_in[:,0:NBINS]
+    hpred = x_in[:,0:NBINS]
+    
+    return categorical_crossentropy(h, hpred)
+
+global_loss_list['loss_adv']=loss_adv
 
 def loss_kldiv_3class(y_in,x):
     """

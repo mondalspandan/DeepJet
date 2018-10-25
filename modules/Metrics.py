@@ -17,6 +17,17 @@ def acc_kldiv(y_in,x):
 
     return categorical_accuracy(y, x)
 
+def acc_reg(y_in,x_in):
+    """
+    Corrected accuracy to be used with custom loss_reg
+    """
+    h = y_in[:,0:NBINS]
+    y = y_in[:,NBINS:NBINS+2]
+    hpred = x_in[:,0:NBINS]
+    ypred = x_in[:,NBINS:NBINS+2]
+
+    return categorical_accuracy(y, ypred)
+
 def mass_kldiv_q(y_in,x):
     """
     KL divergence term for anti-tag events (QCD) to be used with custom loss_kldiv 
@@ -70,6 +81,7 @@ def mass_kldiv_h(y_in,x):
 global_metrics_list['acc_kldiv']=acc_kldiv
 global_metrics_list['mass_kldiv_q']=mass_kldiv_q
 global_metrics_list['mass_kldiv_h']=mass_kldiv_h
+global_metrics_list['acc_reg']=acc_reg
 
 
 
