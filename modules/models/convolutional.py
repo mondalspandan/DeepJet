@@ -4,7 +4,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.merge import Add, Multiply
 from buildingBlocks import block_deepFlavourConvolutions, block_deepFlavourDense, block_SchwartzImage, block_deepFlavourBTVConvolutions
-from adversarial import *
+from Layers import GradientReversal, global_layers_list
 
 def model_deepFlavourNoNeutralReference(Inputs,nclasses,nregclasses,dropoutRate=0.1):
     """
@@ -520,7 +520,7 @@ def model_DeepDoubleXAdversarial(inputs, num_classes, num_regclasses, datasets =
     output = Dense(num_classes, activation='softmax', name='ID_pred', kernel_initializer=kernel_initializer_fc, trainable=discTrainable)(fc)
 
     if num_regclasses>0: 
-        reverse = GradReverseLayer(scale=scale, name='reverse')(fc)
+        reverse = GradientReversal(hp_lambda=scale, name='reverse')(fc)
         fc = FC(reverse, 32, p=0.1, name='fc2', act ='tanh', trainable=advTrainable)
         fc = FC(fc, 32, p=0.1, name='fc3', act='tanh', trainable=advTrainable)
         output_reg = Dense(num_regclasses, activation='softmax', name='mass_reg', kernel_initializer=kernel_initializer_fc, trainable=advTrainable)(fc)

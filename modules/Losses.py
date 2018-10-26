@@ -1,3 +1,4 @@
+import os
 from keras import backend as K
 from tensorflow import where, greater, abs, zeros_like, exp
 import tensorflow as tf
@@ -7,12 +8,14 @@ global_loss_list={}
 
 #whenever a new loss function is created, please add it to the global_loss_list dictionary!
 
-NBINS=40 # number of bins for loss function
+NBINS = 40 # number of bins for loss function
 MMAX = 200. # max value
 MMIN = 40. # min value
 LAMBDA = 15 # lambda for penalty
-LAMBDA_ADV = 15 # lambda for adversary
-
+try:
+    LAMBDA_ADV = float(os.environ['LAMBDA_ADV']) # lambda for adversary
+except:
+    LAMBDA_ADV = 15 # lambda for adversary
 def loss_kldiv(y_in,x):
     """
     mass sculpting penlaty term usking kullback_leibler_divergence

@@ -1,7 +1,21 @@
-import os
-os.environ['DECORRELATE'] = "True"
+import os, sys
+from argparse import ArgumentParser
+parser = ArgumentParser('Run the training')
+parser.add_argument('inputDataCollection')
+parser.add_argument('outputDir')
+parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
+parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
+parser.add_argument("--decor", action='store_true', default=True, help="Use kl_div to decorrelate")
+parser.add_argument("--lambda-adv", default='15', help="lambda for adversarial training", type=str)
+args=parser.parse_args()
+if args.decor:
+    os.environ['DECORRELATE'] = "True"
+else:
+    os.environ['DECORRELATE'] = "False"
+os.environ['LAMBDA_ADV'] = args.lambda_adv
 from DeepJetCore.training.training_base import training_base
-from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_reg, global_loss_list, NBINS, LAMBDA_ADV, loss_disc, loss_adv
+from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_reg, global_loss_list, NBINS, loss_disc, loss_adv, LAMBDA_ADV
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 from Layers import global_layers_list
 from Metrics import global_metrics_list, acc_reg, mass_kldiv_q, mass_kldiv_h
@@ -10,8 +24,9 @@ custom_objects_list.update(global_loss_list)
 custom_objects_list.update(global_layers_list)
 custom_objects_list.update(global_metrics_list)
 
+print("using LAMBDA_ADV =",LAMBDA_ADV)
 #also does all the parsing
-train=training_base(testrun=False,renewtokens=False)
+train=training_base(testrun=False,renewtokens=False,parser=args)
 
 trainedModel = 'train_deepDoubleB_reference/KERAS_check_best_model.h5'
 
