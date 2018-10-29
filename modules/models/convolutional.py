@@ -521,8 +521,8 @@ def model_DeepDoubleXAdversarial(inputs, num_classes, num_regclasses, datasets =
 
     if num_regclasses>0: 
         reverse = GradientReversal(hp_lambda=scale, name='reverse')(fc)
-        fc = FC(reverse, 32, p=0.1, name='fc2', act ='tanh', trainable=advTrainable)
-        fc = FC(fc, 32, p=0.1, name='fc3', act='tanh', trainable=advTrainable)
+        fc = FC(reverse, 100, p=0.1, name='fc2', act ='tanh', trainable=advTrainable)
+        fc = FC(fc, 100, p=0.1, name='fc3', act='tanh', trainable=advTrainable)
         output_reg = Dense(num_regclasses, activation='softmax', name='mass_reg', kernel_initializer=kernel_initializer_fc, trainable=advTrainable)(fc)
         output = Concatenate()([output_reg, output])
                                                             

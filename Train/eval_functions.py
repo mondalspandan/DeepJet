@@ -17,7 +17,7 @@ from sklearn.metrics import roc_curve, auc
 from root_numpy import array2root
 import pandas as pd
 import h5py
-NBINS=40
+from Losses import NBINS
 
 #sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 sess = tf.InteractiveSession()

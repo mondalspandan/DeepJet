@@ -1,6 +1,7 @@
 import sys, os
 from argparse import ArgumentParser
-                                                                                                                                  
+import setGPU
+os.environ['CUDA_VISIBLE_DEVICES']=''
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
 parser.add_argument("--multi", action='store_true', default=False, help="Binary or categorical crossentropy")
@@ -18,14 +19,14 @@ sampleDatasets_cpf_sv = ["db","cpf","sv"]
 sampleDatasets_sv = ["db","sv"]
 
 #select model and eval functions
-from models.DeepJet_models_final import conv_model_final as trainingModel
+from models import model_DeepDoubleXReference as trainingModel
 from DeepJetCore.training.training_base import training_base
 from eval_functions import loadModel, evaluate
 from plots_from_df import make_plots
 from Metrics import global_metrics_list, acc_kldiv
 
 
-inputDataset = sampleDatasets_pf_cpf_sv
+inputDataset = sampleDatasets_cpf_sv
 trainDir = opts.d
 inputTrainDataCollection = opts.t
 inputTestDataCollection = opts.i
