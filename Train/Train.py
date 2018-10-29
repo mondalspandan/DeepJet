@@ -1,6 +1,6 @@
 import sys, os
 from argparse import ArgumentParser
-                                                                                                                                  
+
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
 parser.add_argument("--decor", action='store_true', default=False, help="Use kl_div to decorrelate")
@@ -29,9 +29,9 @@ class MyClass:
 	self.modelMethod = ''
         self.inputDataCollection = ''
         self.outputDir = ''
-
+        
 sampleDatasets_cpf_sv = ["db","cpf","sv"]
-
+        
 #select model and eval functions
 if opts.adv:
     from models.convolutional import model_DeepDoubleXAdversarial as trainingModel
@@ -61,7 +61,7 @@ if True:  # Should probably fix
         multi_gpu = len([x for x in os.popen("nvidia-smi -L").read().split("\n") if "GPU" in x])
         args.gpu = ','.join([str(i) for i in range(multi_gpu)])
         print(args.gpu)
-
+    
     # Separate losses and metrics for training and decorrelation
     if opts.decor and opts.adv:
         print("INFO: using LAMBDA_ADV = %f"%LAMBDA_ADV)
@@ -83,17 +83,22 @@ if True:  # Should probably fix
         metrics=['accuracy']
 
     # Set up training
-    train=training_base(splittrainandtest=0.9,testrun=False, useweights=True, resumeSilently=opts.resume, renewtokens=False, parser=args)
+    train=training_base(splittrainandtest=0.9,testrun=True, useweights=True, resumeSilently=opts.resume, renewtokens=False, parser=args)
     if not train.modelSet():
+        modelargs = {}
+        if opts.adv:
+            modelargs.update({'nRegTargets':NBINS,
+                              'discTrainable': True,
+                              'advTrainable':True})
         train.setModel(trainingModel, 
-			datasets=inputDataset, 
-			multi_gpu=multi_gpu
-			)
+		       datasets=inputDataset, 
+		       multi_gpu=multi_gpu,
+                       **modelargs)
         train.compileModel(learningrate=0.001,
-                        	loss=[loss],
-	                        metrics=metrics,
-				loss_weights=[1.])
-
+                           loss=[loss],
+	                   metrics=metrics,
+			   loss_weights=[1.])
+        
         try: # To make sure no training is lost on restart
 	    train.loadWeights(opts.o+"/KERAS_check_best_model.h5")
         except:
