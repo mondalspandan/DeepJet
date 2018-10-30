@@ -3,10 +3,10 @@ from argparse import ArgumentParser
 
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
-parser.add_argument("--decor", action='store_true', default=False, help="Use kl_div to decorrelate")
-parser.add_argument("--adv", action='store_true', default=False, help="Use adversarial network to decorrelate")
+parser.add_argument("--decor", action='store_true', default=False, help="Serve decorrelated training targets")
+parser.add_argument("--loss", default="loss_kldiv", choices=['loss_kldiv', 'loss_kldiv_3class', 'loss_reg', 'loss_jsdiv'],
+                    help="loss to use for decorrelated training")
 parser.add_argument("--lambda-adv", default='15', help="lambda for adversarial training", type=str)
-parser.add_argument("--classes", help="Number of classes, default 2", default=2, metavar="INT")
 parser.add_argument("-g", "--gpu", default=-1, help="Use 1 specific gpu (Need to be in deepjetLinux3_gpu env)", type=int)
 parser.add_argument("-m", "--multi-gpu", action='store_true', default=False, help="Use all visible gpus (Need to be in deepjetLinux3_gpu env)")
 parser.add_argument("-i", help="Training dataCollection.dc", default=None, metavar="FILE")
@@ -33,16 +33,16 @@ class MyClass:
 sampleDatasets_cpf_sv = ["db","cpf","sv"]
         
 #select model and eval functions
-if opts.adv:
+if opts.loss=='loss_reg':
     from models.convolutional import model_DeepDoubleXAdversarial as trainingModel
 else:
     from models.convolutional import model_DeepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
 
-from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy, loss_reg, NBINS, loss_disc, loss_adv, LAMBDA_ADV
+from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy, loss_jsdiv, loss_reg, NBINS, loss_disc, loss_adv, LAMBDA_ADV, loss_disc_kldiv
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 from Layers import global_layers_list
-from Metrics import global_metrics_list, acc_kldiv, mass_kldiv_q, mass_kldiv_h, acc_reg
+from Metrics import global_metrics_list, acc_kldiv, mass_kldiv_q, mass_kldiv_h, acc_reg, mass_jsdiv_q
 custom_objects_list = {}
 custom_objects_list.update(global_loss_list)
 custom_objects_list.update(global_layers_list)
@@ -63,30 +63,28 @@ if True:  # Should probably fix
         print(args.gpu)
     
     # Separate losses and metrics for training and decorrelation
-    if opts.decor and opts.adv:
+    if opts.decor and opts.loss=='loss_reg':
         print("INFO: using LAMBDA_ADV = %f"%LAMBDA_ADV)
         loss = loss_reg
         metrics = [acc_reg, mass_kldiv_q, mass_kldiv_h, loss_disc, loss_adv]
-    elif opts.decor: 
-        nClasses=int(opts.classes)
-        if nClasses==2:
-            loss = loss_kldiv
-        elif nClasses==3:
-            loss = loss_kldiv_3class
-        else:
-            print("WARNING: Decorrelation with %d classes is not supported yet, using loss for 2 classes." %nClasses)
-            loss = loss_kldiv
-        print("# of classes for decorrelation: %d" %nClasses)
-        metrics=[acc_kldiv, mass_kldiv_q, mass_kldiv_h]
+    elif opts.decor and opts.loss=='loss_kldiv': 
+        loss = loss_kldiv
+        metrics=[acc_kldiv, mass_kldiv_q, mass_kldiv_h, loss_disc_kldiv]
+    elif opts.decor and opts.loss=='loss_kldiv_3class':
+        loss = loss_kldiv_3class
+        metrics=[acc_kldiv]
+    elif opts.decor and opts.loss=='loss_jsdiv':
+        loss = loss_jsdiv
+        metrics=[acc_kldiv, mass_jsdiv_q, loss_disc_kldiv]
     else: 
         loss = 'categorical_crossentropy'
         metrics=['accuracy']
 
     # Set up training
-    train=training_base(splittrainandtest=0.9,testrun=True, useweights=True, resumeSilently=opts.resume, renewtokens=False, parser=args)
+    train=training_base(splittrainandtest=0.9,testrun=False, useweights=True, resumeSilently=opts.resume, renewtokens=False, parser=args)
     if not train.modelSet():
         modelargs = {}
-        if opts.adv:
+        if opts.loss=='loss_reg':
             modelargs.update({'nRegTargets':NBINS,
                               'discTrainable': True,
                               'advTrainable':True})
