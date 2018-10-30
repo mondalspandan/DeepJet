@@ -115,7 +115,9 @@ def loss_kldiv_3class(y_in,x):
         LAMBDA*kullback_leibler_divergence(h_btag_q, h_qtag_q) + \
         LAMBDA*kullback_leibler_divergence(h_btag_b, h_qtag_b) + \
         LAMBDA*kullback_leibler_divergence(h_ctag_q, h_qtag_q) + \
-        LAMBDA*kullback_leibler_divergence(h_ctag_c, h_qtag_c)
+        LAMBDA*kullback_leibler_divergence(h_ctag_c, h_qtag_c) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_c, h_ctag_c) + \
+        LAMBDA*kullback_leibler_divergence(h_btag_b, h_ctag_b)
 
 #please always register the loss function here                                                                                              
 global_loss_list['loss_kldiv_3class']=loss_kldiv_3class
