@@ -61,8 +61,9 @@ def mass_jsdiv_q(y_in,x):
     # select mass histogram for true q events weighted by b prob; normalize
     h_btag_q = h_alltag_q[:,1]
     h_btag_q = h_btag_q / K.sum(h_btag_q,axis=0)
-    
-    return 0.5*kullback_leibler_divergence(h_btag_q, h_qtag_q) + 0.5*kullback_leibler_divergence(h_qtag_q, h_btag_q) 
+
+    h_aver_q = 0.5*h_btag_q+0.5*h_qtag_q
+    return 0.5*kullback_leibler_divergence(h_btag_q, h_aver_q) + 0.5*kullback_leibler_divergence(h_qtag_q, h_aver_q) 
 
 def mass_kldiv_h(y_in,x):
     """

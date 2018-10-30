@@ -50,7 +50,7 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
 
     return evalModel
 
-def evaluate(testd, trainData, model, outputDir, storeInputs=False):
+def evaluate(testd, trainData, model, outputDir, storeInputs=False, adv=False):
     	NENT = 1  # Can skip some events
     	filelist=[]
         i=0
@@ -109,7 +109,10 @@ def evaluate(testd, trainData, model, outputDir, storeInputs=False):
 	for i, tname in enumerate(truthnames):
 		df['truth'+tname] = labels_val[:,i]
 		#print "Mean 0th label predict predict of ", tname, np.mean(predict_test[:,0]), ", Stats:", np.sum(labels_val[:,i]), "/", len(labels_val[:,i])
-		df['predict'+tname] = predict_test[:,i]
+                if adv:
+		    df['predict'+tname] = predict_test[:,NBINS+i]
+                else:
+                    df['predict'+tname] = predict_test[:,i]
 
 	print "Testing prediction:"
 	print "Total: ", len(predict_test[:,0])

@@ -53,7 +53,7 @@ if True:
     else:
         os.mkdir(evalDir)
 
-    df = evaluate(testd, inputTrainDataCollection, evalModel, evalDir, storeInputs=opts.storeInputs)
+    df = evaluate(testd, inputTrainDataCollection, evalModel, evalDir, storeInputs=opts.storeInputs, adv=opts.adv)
     make_plots(evalDir, savedir=opts.p, taggerName=opts.taggerName)
 
 

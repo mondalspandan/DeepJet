@@ -74,10 +74,11 @@ def loss_jsdiv(y_in,x):
     h_btag_q = h_alltag_q[:,1]
     h_btag_q = h_btag_q / K.sum(h_btag_q,axis=0)
 
+    h_aver_q = 0.5*h_btag_q+0.5*h_qtag_q
     # compute KL divergence between true q events weighted by b vs q prob (symmetrized)
     return categorical_crossentropy(y, x) + \
-        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_btag_q, h_qtag_q) + \
-        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_qtag_q, h_btag_q)         
+        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_btag_q, h_aver_q) + \
+        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_qtag_q, h_aver_q)         
 
 #please always register the loss function here                                                                                              
 global_loss_list['loss_jsdiv']=loss_jsdiv
