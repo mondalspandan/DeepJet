@@ -22,14 +22,14 @@ from Losses import NBINS
 #sess = tf.InteractiveSession(config=tf.ConfigProto(log_device_placement=True))
 sess = tf.InteractiveSession()
 
-def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars=None):
+def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars=None,adv=False):
     inputModel = '%s/KERAS_check_best_model.h5'%inputDir
   
     from DeepJetCore.DataCollection import DataCollection
     traind=DataCollection()
     traind.readFromFile(trainData)
     traind.dataclass.regressiontargetclasses = range(0,NBINS)
-    print traind.getNRegressionTargets()
+    print(traind.getNRegressionTargets())
 
     if(LoadModel):
         evalModel = load_model(inputModel, custom_objects = global_loss_list)
@@ -40,7 +40,12 @@ def loadModel(inputDir,trainData,model,LoadModel,sampleDatasets=None,removedVars
         train_inputs = []
         for s in shapes:
             train_inputs.append(keras.layers.Input(shape=s))
-        evalModel = model(train_inputs,traind.getNClassificationTargets(),traind.getNRegressionTargets(),sampleDatasets,removedVars)
+        modelargs = {}
+        if adv:
+            modelargs.update({'nRegTargets':NBINS,
+                              'discTrainable': True,
+                              'advTrainable':True})
+        evalModel = model(train_inputs,traind.getNClassificationTargets(),traind.getNRegressionTargets(),sampleDatasets,removedVars,**modelargs)
         evalModel.load_weights(inputModel)
 
     return evalModel
