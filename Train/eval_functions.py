@@ -111,6 +111,8 @@ def evaluate(testd, trainData, model, outputDir, storeInputs=False, adv=False):
 		#print "Mean 0th label predict predict of ", tname, np.mean(predict_test[:,0]), ", Stats:", np.sum(labels_val[:,i]), "/", len(labels_val[:,i])
                 if adv:
 		    df['predict'+tname] = predict_test[:,NBINS+i]
+                    for j in range(NBINS):
+                        df['predict_massbin%i'%j] = predict_test[:,j+i]
                 else:
                     df['predict'+tname] = predict_test[:,i]
 
