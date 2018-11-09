@@ -100,11 +100,9 @@ if True:  # Should probably fix
 	                   metrics=metrics,
 			   loss_weights=[1.])
         
-        try: # To make sure no training is lost on restart
-	    train.loadWeights(opts.o+"/KERAS_check_best_model.h5")
+        if os.path.isfile(opts.o+"/KERAS_check_best_model.h5"): # To make sure no training is lost on restart
+            train.loadWeights(opts.o+"/KERAS_check_best_model.h5")
             print "Loaded weights from existing model in output directory."
-        except:
-	    pass
 
     # Pretrain and fix batch normalization weights to be consistent
     if not opts.decor:
