@@ -21,10 +21,10 @@ cd Train
 convertFromRoot.py -i ../train_list_94x_50p.txt -o $INDIR/dctrain -c TrainData_DeepDoubleX_3lab
 #python Train.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training --batch 4096 --epochs 2 --resume 
 #cp -r $INDIR/training $INDIR/training_nodec
-python Train.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training --batch 4096 --epochs 100 --resume --decor --loss loss_reg --lambda-adv 1 
+python Train.py -i $INDIR/dctrain/dataCollection.dc -o $INDIR/training --batch 4096 --epochs 100 --resume --decor --loss loss_reg --lambda-adv 1 --classes 3
 
 convertFromRoot.py -i ../test_list_94x_50p.txt -o $INDIR/dctest --testdatafor $INDIR/training/trainsamples.dc
 #python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training_nodec -o $INDIR/res
-python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/res_adv --adv
+python Eval.py -i $INDIR/dctest/dataCollection.dc -t $INDIR/dctrain/dataCollection.dc -d $INDIR/training -o $INDIR/res_adv --adv --era 2017
 
 

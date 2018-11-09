@@ -14,6 +14,7 @@ parser.add_argument("-o",  help="Eval output dir", default=None, metavar="PATH")
 parser.add_argument("-p",  help="Plot output dir within Eval output dir", default="Plots", metavar="PATH")
 parser.add_argument("--storeInputs", action='store_true', help="Store inputs in df", default=False)
 parser.add_argument("--taggerName",  help="DeepDouble{input} name in ROC plots", default="X")
+parser.add_argument("--era",  help="Era/Year label in plots", default="2016")
 opts=parser.parse_args()
 if opts.decor:  os.environ['DECORRELATE'] = "True"
 else:  os.environ['DECORRELATE'] = "False"
@@ -39,6 +40,10 @@ inputTrainDataCollection = opts.t
 inputTestDataCollection = opts.i
 LoadModel = False
 removedVars = None
+if opts.era=="2016":
+    eraText=r'2016 (13 TeV)'
+elif opts.era=="2017":
+    eraText=r'2017 (13 TeV)'
 
 if True:
     evalModel = loadModel(trainDir,inputTrainDataCollection,trainingModel,LoadModel,inputDataset,removedVars,adv=opts.adv)
@@ -54,6 +59,6 @@ if True:
         os.mkdir(evalDir)
 
     df = evaluate(testd, inputTrainDataCollection, evalModel, evalDir, storeInputs=opts.storeInputs, adv=opts.adv)
-    make_plots(evalDir, savedir=opts.p, taggerName=opts.taggerName)
+    make_plots(evalDir, savedir=opts.p, taggerName=opts.taggerName, eraText=eraText)
 
 
