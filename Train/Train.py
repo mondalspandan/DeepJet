@@ -7,6 +7,7 @@ parser.add_argument("--decor", action='store_true', default=False, help="Serve d
 parser.add_argument("--loss", default="loss_kldiv", choices=['loss_kldiv', 'loss_kldiv_3class', 'loss_reg', 'loss_jsdiv'],
                     help="loss to use for decorrelated training")
 parser.add_argument("--lambda-adv", default='15', help="lambda for adversarial training", type=str)
+parser.add_argument("--classes", default='2', help="Number of classes for multiclassifier", type=str)
 parser.add_argument("-g", "--gpu", default=-1, help="Use 1 specific gpu (Need to be in deepjetLinux3_gpu env)", type=int)
 parser.add_argument("-m", "--multi-gpu", action='store_true', default=False, help="Use all visible gpus (Need to be in deepjetLinux3_gpu env)")
 parser.add_argument("-i", help="Training dataCollection.dc", default=None, metavar="FILE")
@@ -19,6 +20,7 @@ opts=parser.parse_args()
 if opts.decor:  os.environ['DECORRELATE'] = "True"
 else:  os.environ['DECORRELATE'] = "False"
 os.environ['LAMBDA_ADV'] = opts.lambda_adv
+os.environ['NCLASSES'] = opts.classes
 
 # Some used default settings
 class MyClass:
@@ -39,7 +41,7 @@ else:
     from models.convolutional import model_DeepDoubleXReference  as trainingModel
 from DeepJetCore.training.training_base import training_base
 
-from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy, loss_jsdiv, loss_reg, NBINS, loss_disc, loss_adv, LAMBDA_ADV, loss_disc_kldiv
+from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy, loss_jsdiv, loss_reg, NBINS, NCLASSES, loss_disc, loss_adv, LAMBDA_ADV, loss_disc_kldiv
 from DeepJetCore.modeltools import fixLayersContaining,printLayerInfosAndWeights
 from Layers import global_layers_list
 from Metrics import global_metrics_list, acc_kldiv, mass_kldiv_q, mass_kldiv_h, acc_reg, mass_jsdiv_q
@@ -65,6 +67,7 @@ if True:  # Should probably fix
     # Separate losses and metrics for training and decorrelation
     if opts.decor and opts.loss=='loss_reg':
         print("INFO: using LAMBDA_ADV = %f"%LAMBDA_ADV)
+        print("INFO: using NCLASSES = %d"%NCLASSES)
         loss = loss_reg
         metrics = [acc_reg, mass_kldiv_q, mass_kldiv_h, loss_disc, loss_adv]
     elif opts.decor and opts.loss=='loss_kldiv': 
@@ -97,10 +100,9 @@ if True:  # Should probably fix
 	                   metrics=metrics,
 			   loss_weights=[1.])
         
-        try: # To make sure no training is lost on restart
-	    train.loadWeights(opts.o+"/KERAS_check_best_model.h5")
-        except:
-	    pass
+        if os.path.isfile(opts.o+"/KERAS_check_best_model.h5"): # To make sure no training is lost on restart
+            train.loadWeights(opts.o+"/KERAS_check_best_model.h5")
+            print "Loaded weights from existing model in output directory."
 
     # Pretrain and fix batch normalization weights to be consistent
     if not opts.decor:

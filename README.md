@@ -39,7 +39,7 @@ ssh max-wng001
 cd <your working dir>/DeepJet
 source gpu_env.sh
 ```
-
+(Edit gpu_env.sh to uncomment the line corresponding to the cluster in use.)
 
 The preparation for the training consists of the following steps
 ====

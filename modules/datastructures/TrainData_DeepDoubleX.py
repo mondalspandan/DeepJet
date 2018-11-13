@@ -699,7 +699,7 @@ class TrainData_DeepDoubleX_db_cpf_sv_reduced_3lab(TrainData_DeepDoubleX_db_cpf_
         import numpy
         self.reducedtruthclasses=['QCD','Hcc', 'Hbb']
         if tuple_in is not None:
-            q = tuple_in["fj_isQCD"]
+            q = tuple_in["fj_isQCD"] * tuple_in['sample_isQCD']
             q = q.view(numpy.ndarray)
             h1 = tuple_in['fj_isCC'] * tuple_in['fj_isH']
             h2 = tuple_in['fj_isBB'] * tuple_in['fj_isH'] 
