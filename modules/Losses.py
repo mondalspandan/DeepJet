@@ -65,6 +65,8 @@ def loss_jsdiv(y_in,x):
     
     # build mass histogram for true q events weighted by q, b prob
     h_alltag_q = K.dot(K.transpose(h), K.dot(tf.diag(y[:,0]),x))
+    # build mass histogram for true b events weighted by q, b prob
+    h_alltag_b = K.dot(K.transpose(h), K.dot(tf.diag(y[:,1]),x))
     
     # select mass histogram for true q events weighted by q prob; normalize
     h_qtag_q = h_alltag_q[:,0]
@@ -74,10 +76,22 @@ def loss_jsdiv(y_in,x):
     h_btag_q = h_btag_q / K.sum(h_btag_q,axis=0)
 
     h_aver_q = 0.5*h_btag_q+0.5*h_qtag_q
+
+    # select mass histogram for true b events weighted by q prob; normalize        
+    h_qtag_b = h_alltag_b[:,0]
+    h_qtag_b = h_qtag_b / K.sum(h_qtag_b,axis=0)
+    # select mass histogram for true b events weighted by b prob; normalize        
+    h_btag_b = h_alltag_b[:,1]
+    h_btag_b = h_btag_b / K.sum(h_btag_b,axis=0)
+
+    h_aver_b = 0.5*h_btag_b+0.5*h_qtag_b
+
     # compute KL divergence between true q events weighted by b vs q prob (symmetrized)
     return categorical_crossentropy(y, x) + \
         LAMBDA_ADV*0.5*kullback_leibler_divergence(h_btag_q, h_aver_q) + \
-        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_qtag_q, h_aver_q)         
+        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_qtag_q, h_aver_q) + \
+        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_btag_b, h_aver_b) + \
+        LAMBDA_ADV*0.5*kullback_leibler_divergence(h_qtag_b, h_aver_b)         
 
 #please always register the loss function here                                                                                              
 global_loss_list['loss_jsdiv']=loss_jsdiv
