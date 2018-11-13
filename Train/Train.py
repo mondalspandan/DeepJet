@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 # Options 
 parser = ArgumentParser(description ='Script to run the training and evaluate it')
 parser.add_argument("--decor", action='store_true', default=False, help="Serve decorrelated training targets")
+parser.add_argument("--reduced", action='store_true', default=False, help="reduced model")
 parser.add_argument("--loss", default="loss_kldiv", choices=['loss_kldiv', 'loss_kldiv_3class', 'loss_reg', 'loss_jsdiv'],
                     help="loss to use for decorrelated training")
 parser.add_argument("--lambda-adv", default='15', help="lambda for adversarial training", type=str)
@@ -35,8 +36,11 @@ sampleDatasets_cpf_sv = ["db","cpf","sv"]
 #select model and eval functions
 if opts.loss=='loss_reg':
     from models.convolutional import model_DeepDoubleXAdversarial as trainingModel
+elif opts.reduced:
+    from models.convolutional import model_DeepDoubleXReduced as trainingModel
 else:
     from models.convolutional import model_DeepDoubleXReference  as trainingModel
+    
 from DeepJetCore.training.training_base import training_base
 
 from Losses import loss_NLL, loss_meansquared, loss_kldiv, loss_kldiv_3class, global_loss_list, custom_crossentropy, loss_jsdiv, loss_reg, NBINS, loss_disc, loss_adv, LAMBDA_ADV, loss_disc_kldiv

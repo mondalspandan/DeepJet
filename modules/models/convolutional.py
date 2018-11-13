@@ -483,6 +483,49 @@ def model_DeepDoubleXReference(inputs, num_classes, num_regclasses, datasets = [
 
     return model
 
+def model_DeepDoubleXReduced(inputs, num_classes, num_regclasses, datasets = ['db','cpf','sv'], removedVars = None, multi_gpu=1,  **kwargs):
+
+    """
+    reference 1x1 convolutional model for 'deepDoubleX'
+    with recurrent layers and batch normalisation
+    """
+    kernel_initializer = 'he_normal'
+    kernel_initializer_fc = 'lecun_uniform'
+    normalizedInputs = []
+
+    for i in range(len(inputs)):
+        normedLayer = BatchNormalization(momentum=0.3,name = '%s_input_batchnorm'%datasets[i])(inputs[i])
+        normalizedInputs.append(normedLayer)
+
+    flattenLayers = []
+    flattenLayers.append(Flatten()(normalizedInputs[0]))
+
+    for ds, normalizedInput in zip(datasets[1:],normalizedInputs[1:]):                
+        x = Conv1D(filters=16, kernel_size=(1,), strides=(1,), padding='same', 
+                                kernel_initializer=kernel_initializer, use_bias=False, name='%s_conv1'%ds, 
+                                activation = 'relu')(normalizedInput)
+        x = SpatialDropout1D(rate=0.1)(x)
+        x = Conv1D(filters=16, kernel_size=(1,), strides=(1,), padding='same', 
+                             kernel_initializer=kernel_initializer, use_bias=False, name='%s_conv2'%ds, 
+                             activation = 'relu')(x)
+        x = SpatialDropout1D(rate=0.1)(x)
+        x = GRU(25,go_backwards=True,implementation=2,name='%s_gru'%ds)(x)
+        x = Dropout(rate=0.1)(x)
+        flattenLayers.append(x)
+
+    concat = Concatenate()(flattenLayers)
+
+
+    fc = FC(concat, 100, p=0.1, name='fc1')
+    output = Dense(num_classes, activation='softmax', name='ID_pred', kernel_initializer=kernel_initializer_fc)(fc)
+                            
+    model = Model(inputs=inputs, outputs=[output])
+    if multi_gpu > 1:
+        from multi_gpu_model import multi_gpu_model
+        model = multi_gpu_model(model, gpus=multi_gpu)
+
+    return model
+
 def model_DeepDoubleXAdversarial(inputs, num_classes, num_regclasses, datasets = ['db','cpf','sv'], removedVars = None, multi_gpu=1, scale=1.0, discTrainable = True, advTrainable = True, **kwargs):
 
     """
