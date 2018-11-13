@@ -34,7 +34,7 @@ def make_dirs(dirname):
         if e.errno != errno.EEXIST:
         	raise
 
-def make_plots(outputDir, savedir="Plots", taggerName="X"):
+def make_plots(outputDir, savedir="Plots", taggerName="X", eraText=r'2016 (13 TeV)'):
     print "Making standard plots"	
     frame = pd.read_pickle(outputDir+'/output.pkl')
     labels = [n[len("truth"):] for n in frame.keys() if n.startswith("truth")]
@@ -120,7 +120,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
           + "\n "+str(int(round((min(frame.fj_sdmass)))))+" $\mathrm{<\ jet\ m_{sd}\ <}$ "+str(int(round((max(frame.fj_sdmass)))))+" GeV"
                        )
         leg._legend_box.align = "left"
-        ax.annotate(r'2016 (13 TeV)', xy=(0.80, 1.1), fontname='Helvetica', ha='left',
+        ax.annotate(eraText, xy=(0.80, 1.1), fontname='Helvetica', ha='left',
                     bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         ax.annotate('$\mathbf{CMS}$', xy=(0.01, 1.1), fontname='Helvetica', fontsize=24, fontweight='bold', ha='left',
                     bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
@@ -191,7 +191,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
               + "\n "+str(int(round((min(frame.fj_sdmass)))))+" $\mathrm{<\ jet\ m_{SD}\ <}$ "+str(int(round((max(frame.fj_sdmass)))))+" GeV"
                   + "\n Tagging {}".format(legend_siglab)           )
         leg._legend_box.align = "right"
-        ax.annotate(r'2016 (13 TeV)', xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
+        ax.annotate(eraText, xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
                         bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         ax.annotate('$\mathbf{CMS}$', xy=(0, 1.015), xycoords='axes fraction', fontname='Helvetica', fontsize=24, fontweight='bold', ha='left',
                         bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
@@ -226,7 +226,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
               + "\n "+str(int(round((min(frame.fj_sdmass)))))+" $\mathrm{<\ jet\ m_{sd}\ <}$ "+str(int(round((max(frame.fj_sdmass)))))+" GeV"\
                 + "\n Tagging {}".format(legend_siglab)           )
         leg._legend_box.align = "right"
-        ax.annotate(r'2016 (13 TeV)', xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
+        ax.annotate(eraText, xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         ax.annotate('$\mathbf{CMS}$', xy=(0, 1.015), xycoords='axes fraction', fontname='Helvetica', fontsize=24, fontweight='bold', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
@@ -321,7 +321,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
         ax.annotate( mpt, xy=(0.05, 0.88), xycoords='axes fraction', fontname='Helvetica', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         leg._legend_box.align = "right"
-        ax.annotate(r'2016 (13 TeV)', xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
+        ax.annotate(eraText, xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         ax.annotate('$\mathbf{CMS}$', xy=(0, 1.015), xycoords='axes fraction', fontname='Helvetica', fontsize=24, fontweight='bold', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
@@ -412,7 +412,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
         ax.annotate( mpt, xy=(0.05, 0.88), xycoords='axes fraction', fontname='Helvetica', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         leg._legend_box.align = "right"
-        ax.annotate(r'2016 (13 TeV)', xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
+        ax.annotate(eraText, xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
         ax.annotate('$\mathbf{CMS}$', xy=(0, 1.015), xycoords='axes fraction', fontname='Helvetica', fontsize=24, fontweight='bold', ha='left',
             bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
@@ -539,7 +539,7 @@ def make_plots(outputDir, savedir="Plots", taggerName="X"):
                   + "\n "+str(int(round((min(frame.fj_sdmass)))))+" $\mathrm{<\ jet\ m_{SD}\ <}$ "+str(int(round((max(frame.fj_sdmass)))))+" GeV"
                                )
             leg._legend_box.align = "left"
-            ax.annotate(r'2016 (13 TeV)', xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
+            ax.annotate(eraText, xy=(0.8, 1.015), xycoords='axes fraction', fontname='Helvetica', ha='left',
                 bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)
             ax.annotate('$\mathbf{CMS}$', xy=(0, 1.015), xycoords='axes fraction', fontname='Helvetica', fontsize=24, fontweight='bold', ha='left',
                 bbox={'facecolor':'white', 'edgecolor':'white', 'alpha':0, 'pad':13}, annotation_clip=False)

@@ -1,7 +1,7 @@
 
 from keras import backend as K
 from tensorflow import where, greater, abs, zeros_like, exp
-import tensorflow as tf
+import tensorflow as tf, os
 from keras.losses import kullback_leibler_divergence, categorical_crossentropy, binary_crossentropy
 
 global_loss_list={}
@@ -9,12 +9,11 @@ global_loss_list={}
 #whenever a new loss function is created, please add it to the global_loss_list dictionary!
 
 NBINS = 40 # number of bins for loss function
+NCLASSES = int(os.getenv('NCLASSES', default='2'))
 MMAX = 200. # max value
 MMIN = 40. # min value
-try:
-    LAMBDA_ADV = float(os.environ['LAMBDA_ADV']) # lambda for adversary/penalty
-except:
-    LAMBDA_ADV = 15 # lambda for adversary
+LAMBDA_ADV = float(os.getenv('LAMBDA_ADV', default='15')) # lambda for adversary/penalty
+
 def loss_kldiv(y_in,x):
     """
     mass sculpting penlaty term using kullback_leibler_divergence
@@ -99,13 +98,13 @@ def loss_reg(y_in,x_in):
     y_in: truth [h, y]
     x: predicted NN output for y
     h: the truth mass histogram vector "one-hot encoded" (length NBINS=40)
-    y: the truth categorical labels  "one-hot encoded" (length NClasses=2)
+    y: the truth categorical labels  "one-hot encoded" (length NClasses=?)
     """
     h = y_in[:,0:NBINS]
-    y = y_in[:,NBINS:NBINS+2]
+    y = y_in[:,NBINS:NBINS+NCLASSES]
     
     hpred = x_in[:,0:NBINS]
-    ypred = x_in[:,NBINS:NBINS+2]
+    ypred = x_in[:,NBINS:NBINS+NCLASSES]
     
     return categorical_crossentropy(y, ypred) + LAMBDA_ADV*categorical_crossentropy(h, hpred)
 
@@ -115,8 +114,8 @@ def loss_disc(y_in,x_in):
     """
     Loss for only the discriminator part
     """
-    y = y_in[:,NBINS:NBINS+2]
-    ypred = x_in[:,NBINS:NBINS+2]
+    y = y_in[:,NBINS:NBINS+NCLASSES]
+    ypred = x_in[:,NBINS:NBINS+NCLASSES]
 
     return categorical_crossentropy(y, ypred)
 
